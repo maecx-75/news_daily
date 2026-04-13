@@ -1,393 +1,109 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Das Wichtigste des Tages</title>
-  <meta http-equiv="refresh" content="300">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>News Dashboard</title>
 
-    :root {
-      --red: #c40012;
-      --dark-red: #8b000c;
-      --black-red: #650008;
-      --page-bg: #000;
-      --card-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
-      --border: rgba(255,255,255,0.08);
-    }
+<style>
+body{margin:0;font-family:Arial;background:#000;color:white;}
+.header{background:#c40012;padding:20px;text-align:center;}
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--page-bg);
-      color: #fff;
-    }
+/* Breaking Banner */
+.banner{
+display:flex;
+background:#111;
+overflow:hidden;
+border-bottom:2px solid #c40012;
+}
+.banner-label{
+background:#c40012;
+padding:10px 15px;
+font-weight:bold;
+}
+.banner-track{
+white-space:nowrap;
+animation:scroll 20s linear infinite;
+padding:10px;
+}
+@keyframes scroll{
+0%{transform:translateX(100%);}
+100%{transform:translateX(-100%);}
+}
 
-    .topbar {
-      background: linear-gradient(90deg, var(--red) 0%, var(--dark-red) 65%, var(--black-red) 100%);
-      min-height: 132px;
-      display: grid;
-      grid-template-columns: 180px 1fr 440px;
-      align-items: center;
-      padding: 16px 28px;
-      border-bottom: 18px solid #540007;
-      gap: 12px;
-    }
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px;padding:20px;}
 
-    .logo-box {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-    }
+.tile{position:relative;border-radius:10px;overflow:hidden;text-decoration:none;color:white;
+background-size:cover;background-position:center;min-height:280px;display:block;}
 
-    .logo-box img {
-      width: 92px;
-      height: auto;
-      display: block;
-      border-radius: 18px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.28);
-    }
+.tile.large{grid-column:span 4;}
+.tile.small{grid-column:span 6;min-height:200px;}
 
-    .headline {
-      text-align: center;
-      color: white;
-    }
+.overlay{position:absolute;bottom:0;width:100%;padding:15px;
+background:linear-gradient(transparent,rgba(0,0,0,0.85));}
 
-    .headline h1 {
-      font-size: clamp(30px, 3.7vw, 56px);
-      line-height: 1;
-      font-weight: 900;
-      margin-bottom: 4px;
-      letter-spacing: -0.03em;
-    }
-
-    .headline p {
-      font-size: clamp(14px, 1.15vw, 20px);
-      font-weight: 600;
-    }
-
-    .top-right {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 12px;
-      color: white;
-      font-size: 17px;
-      font-weight: 700;
-      flex-wrap: wrap;
-    }
-
-    .top-right select,
-    .meta-box {
-      font-size: 14px;
-      padding: 7px 10px;
-      border-radius: 7px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.12);
-      color: white;
-      min-width: 95px;
-      text-align: center;
-      backdrop-filter: blur(4px);
-    }
-
-    .top-right select {
-      background: #fff;
-      color: #111;
-      min-width: 132px;
-      font-weight: 700;
-    }
-
-    .main {
-      max-width: 1520px;
-      margin: 22px auto;
-      padding: 0 22px 34px;
-    }
-
-    .section-title {
-      font-size: 30px;
-      font-weight: 900;
-      margin-bottom: 16px;
-      letter-spacing: -0.02em;
-    }
-
-    .tiles {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 18px;
-    }
-
-    .tile {
-      position: relative;
-      display: block;
-      text-decoration: none;
-      color: white;
-      overflow: hidden;
-      border-radius: 8px;
-      min-height: 310px;
-      background-size: cover;
-      background-position: center;
-      box-shadow: var(--card-shadow);
-      border: 1px solid var(--border);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    .tile:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 18px 34px rgba(0,0,0,0.42);
-    }
-
-    .tile::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.18) 32%, rgba(0,0,0,0.82) 100%);
-    }
-
-    .tile::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(196,0,18,0.24), rgba(0,0,0,0));
-      pointer-events: none;
-    }
-
-    .tile-content {
-      position: absolute;
-      inset: auto 0 0 0;
-      padding: 20px;
-      z-index: 1;
-    }
-
-    .tile-kicker {
-      display: inline-block;
-      background: rgba(196,0,18,0.92);
-      color: white;
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 6px 8px;
-      border-radius: 3px;
-      margin-bottom: 10px;
-    }
-
-    .tile h2 {
-      font-size: 32px;
-      line-height: 1.02;
-      font-weight: 900;
-      margin-bottom: 8px;
-      letter-spacing: -0.02em;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.28);
-    }
-
-    .tile p {
-      font-size: 15px;
-      line-height: 1.35;
-      opacity: 0.98;
-      max-width: 92%;
-    }
-
-    .tile.equal { grid-column: span 4; }
-    .tile.small { grid-column: span 6; min-height: 220px; }
-
-    .news90 {
-      background-image:
-        linear-gradient(135deg, rgba(180, 0, 20, 0.20), rgba(0, 0, 0, 0.12)),
-        url('news90.png');
-    }
-
-    .news1920 {
-      background-image:
-        linear-gradient(135deg, rgba(180, 0, 20, 0.26), rgba(0, 0, 0, 0.15)),
-        url('https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1400&q=80');
-    }
-
-    .wetter {
-      background-image:
-        linear-gradient(135deg, rgba(180, 0, 20, 0.24), rgba(0, 0, 0, 0.18)),
-        url('https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80');
-    }
-
-    .programm {
-      background-image:
-        linear-gradient(135deg, rgba(180, 0, 20, 0.22), rgba(0, 0, 0, 0.18)),
-        url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80');
-    }
-
-    .google {
-      background-image:
-        linear-gradient(135deg, rgba(180, 0, 20, 0.20), rgba(0, 0, 0, 0.18)),
-        url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80');
-    }
-
-    .footer-note {
-      margin-top: 16px;
-      color: #9a9a9a;
-      font-size: 14px;
-    }
-
-    @media (max-width: 1180px) {
-      .topbar {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-
-      .logo-box,
-      .top-right {
-        justify-content: center;
-      }
-
-      .tile.equal,
-      .tile.small {
-        grid-column: span 12;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .main { padding: 0 14px 24px; }
-      .tile { min-height: 260px; }
-      .tile.small { min-height: 190px; }
-      .tile h2 { font-size: 26px; }
-      .headline h1 { font-size: 34px; }
-    }
-  </style>
+.headlines{
+position:absolute;
+top:10px;
+right:10px;
+background:rgba(0,0,0,0.7);
+padding:10px;
+border-radius:8px;
+font-size:13px;
+max-width:60%;
+}
+.headlines div{margin-bottom:6px;}
+</style>
 </head>
+
 <body>
-  <header class="topbar">
-    <div class="logo-box">
-      <img src="servustv-on-logo.png" alt="ServusTV On Logo">
-    </div>
 
-    <div class="headline">
-      <h1>Das Wichtigste des Tages</h1>
-      <p>Die Top Nachrichten und das Wetter für Österreich</p>
-    </div>
+<div class="header">
+<h1>Das Wichtigste des Tages</h1>
+</div>
 
-    <div class="top-right">
-      <div class="meta-box" id="currentTime">--:--</div>
+<div class="banner">
+<div class="banner-label">Breaking</div>
+<div class="banner-track">
+Topmeldung 1 • Topmeldung 2 • Topmeldung 3 • Topmeldung 4 •
+</div>
+</div>
 
-      <select id="citySelect">
-        <option value="Salzburg" selected>Salzburg</option>
-        <option value="Wien">Wien</option>
-        <option value="Linz">Linz</option>
-        <option value="Graz">Graz</option>
-        <option value="Innsbruck">Innsbruck</option>
-        <option value="Klagenfurt">Klagenfurt</option>
-        <option value="St. Pölten">St. Pölten</option>
-        <option value="Eisenstadt">Eisenstadt</option>
-        <option value="Bregenz">Bregenz</option>
-      </select>
+<div class="grid">
 
-      <div class="meta-box" id="sunrise">🌅 --:--</div>
-      <div class="meta-box" id="sunset">🌇 --:--</div>
-    </div>
-  </header>
+<a class="tile large" href="https://www.servustv.com/aktuelles/v/aaft895vwami4c3daw3k/" target="_blank"
+style="background-image:url('news90.png')">
+<div class="overlay"><h2>90 Sekunden News</h2></div>
+</a>
 
-  <main class="main">
-    <div class="section-title">Top Nachrichten</div>
+<a class="tile large" href="https://www.servustv.com/aktuelles/v/aais9qs7iazmln7iuahw/" target="_blank"
+style="background-image:url('news1920.png')">
+<div class="overlay"><h2>Nachrichten 19:20</h2></div>
+</a>
 
-    <section class="tiles">
-      <a class="tile equal news90" href="https://www.servustv.com/aktuelles/v/aaft895vwami4c3daw3k/" target="_blank" rel="noopener noreferrer">
-        <div class="tile-content">
-          <div class="tile-kicker">ServusTV</div>
-          <h2>Servus Nachrichten in 90 Sekunden</h2>
-          <p>Kompakter Überblick mit den wichtigsten Meldungen des Tages.</p>
-        </div>
-      </a>
+<a class="tile large" href="https://www.servustv.com/aktuelles/b/servus-wetter/aa-1tb7r1phs1w11/" target="_blank"
+style="background-image:url('wetter.png')">
+<div class="overlay"><h2>Servus Wetter</h2></div>
+</a>
 
-      <a class="tile equal news1920" href="https://www.servustv.com/aktuelles/v/aais9qs7iazmln7iuahw/" target="_blank" rel="noopener noreferrer">
-        <div class="tile-content">
-          <div class="tile-kicker">Nachrichten</div>
-          <h2>Servus Nachrichten 19:20</h2>
-          <p>Die Hauptausgabe mit Politik, Österreich und internationalen Themen.</p>
-        </div>
-      </a>
+<a class="tile small" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank"
+style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba')">
+<div class="overlay"><h2>TV Programm</h2></div>
+</a>
 
-      <a class="tile equal wetter" href="https://www.servustv.com/aktuelles/b/servus-wetter/aa-1tb7r1phs1w11/" target="_blank" rel="noopener noreferrer">
-        <div class="tile-content">
-          <div class="tile-kicker">Wetter</div>
-          <h2>Servus Wetter</h2>
-          <p>Aktuelle Wetterlage, Prognosen und Überblick für Österreich.</p>
-        </div>
-      </a>
+<a class="tile small" href="https://news.google.com/" target="_blank"
+style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d')">
 
-      <a class="tile small programm" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank" rel="noopener noreferrer">
-        <div class="tile-content">
-          <div class="tile-kicker">Programm</div>
-          <h2>ServusTV Programm</h2>
-          <p>Heute im TV und direkt zum aktuellen Programmplan.</p>
-        </div>
-      </a>
+<div class="headlines">
+<div>• Schlagzeile 1</div>
+<div>• Schlagzeile 2</div>
+<div>• Schlagzeile 3</div>
+</div>
 
-      <a class="tile small google" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" rel="noopener noreferrer">
-        <div class="tile-content">
-          <div class="tile-kicker">Google News</div>
-          <h2>Top 5 Nachrichten</h2>
-          <p>Die wichtigsten Schlagzeilen des Tages auf einen Blick.</p>
-        </div>
-      </a>
-    </section>
+<div class="overlay"><h2>Top Nachrichten</h2></div>
+</a>
 
-    <p class="footer-note">Diese Version enthält jetzt das echte 90-Sekunden-Vorschaubild, alle 9 Landeshauptstädte, die Uhr links von der Auswahl und automatische Sonnenzeiten.</p>
-  </main>
+</div>
 
-  <script>
-    const cityCoords = {
-      "Salzburg": { lat: 47.8095, lon: 13.0550 },
-      "Wien": { lat: 48.2082, lon: 16.3738 },
-      "Linz": { lat: 48.3069, lon: 14.2858 },
-      "Graz": { lat: 47.0707, lon: 15.4395 },
-      "Innsbruck": { lat: 47.2692, lon: 11.4041 },
-      "Klagenfurt": { lat: 46.6365, lon: 14.3122 },
-      "St. Pölten": { lat: 48.2047, lon: 15.6241 },
-      "Eisenstadt": { lat: 47.8457, lon: 16.5233 },
-      "Bregenz": { lat: 47.5031, lon: 9.7471 }
-    };
-
-    function updateClock() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString("de-AT", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-      document.getElementById("currentTime").textContent = timeString;
-    }
-
-    function formatHHMM(value) {
-      if (!value) return "--:--";
-      const date = new Date(value);
-      return date.toLocaleTimeString("de-AT", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-
-    async function updateSunTimes(city) {
-      const coords = cityCoords[city];
-      if (!coords) return;
-
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=1`;
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        const sunrise = data?.daily?.sunrise?.[0];
-        const sunset = data?.daily?.sunset?.[0];
-
-        document.getElementById("sunrise").textContent = `🌅 ${formatHHMM(sunrise)}`;
-        document.getElementById("sunset").textContent = `🌇 ${formatHHMM(sunset)}`;
-      } catch (e) {
-        document.getElementById("sunrise").textContent = "🌅 --:--";
-        document.getElementById("sunset").textContent = "🌇 --:--";
-      }
-    }
-
-    const citySelect = document.getElementById("citySelect");
-    citySelect.addEventListener("change", () => updateSunTimes(citySelect.value));
-
-    updateClock();
-    setInterval(updateClock, 1000 * 20);
-    updateSunTimes(citySelect.value);
-  </script>
 </body>
 </html>
