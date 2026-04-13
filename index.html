@@ -9,142 +9,105 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --red: #c80f17;
-      --dark-red: #7d0008;
-      --page-bg: #000000;
-      --card-radius: 10px;
-      --shadow: 0 14px 34px rgba(0,0,0,0.35);
+      --red: #c40012;
+      --dark-red: #8b000c;
+      --black-red: #650008;
+      --page-bg: #000;
+      --card-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
       --border: rgba(255,255,255,0.08);
     }
 
     body {
       font-family: Arial, Helvetica, sans-serif;
       background: var(--page-bg);
-      color: white;
+      color: #fff;
     }
 
     .topbar {
-      background: linear-gradient(90deg, #c91218 0%, #98000b 60%, #5a0007 100%);
-      border-bottom: 14px solid #3e0005;
-      padding: 14px 24px;
+      background: linear-gradient(90deg, var(--red) 0%, var(--dark-red) 65%, var(--black-red) 100%);
+      min-height: 132px;
       display: grid;
-      grid-template-columns: 190px 1fr 340px;
-      gap: 18px;
+      grid-template-columns: 180px 1fr 440px;
       align-items: center;
+      padding: 16px 28px;
+      border-bottom: 18px solid #540007;
+      gap: 12px;
     }
 
-    .logo-wrap img {
-      width: 104px;
+    .logo-box {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .logo-box img {
+      width: 92px;
       height: auto;
       display: block;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.28);
     }
 
     .headline {
       text-align: center;
+      color: white;
     }
 
     .headline h1 {
-      font-size: clamp(28px, 3.8vw, 56px);
+      font-size: clamp(30px, 3.7vw, 56px);
       line-height: 1;
-      letter-spacing: -0.03em;
       font-weight: 900;
       margin-bottom: 4px;
+      letter-spacing: -0.03em;
     }
 
     .headline p {
-      font-size: clamp(14px, 1.1vw, 20px);
+      font-size: clamp(14px, 1.15vw, 20px);
       font-weight: 600;
-      opacity: 0.97;
     }
 
-    .meta {
+    .top-right {
       display: flex;
       justify-content: flex-end;
       align-items: center;
       gap: 12px;
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
       flex-wrap: wrap;
-      font-weight: 700;
     }
 
-    .meta select {
-      background: #fff;
-      color: #111;
-      border: 0;
-      border-radius: 7px;
-      padding: 6px 10px;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
+    .top-right select,
     .meta-box {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 14px;
+      padding: 7px 10px;
       border-radius: 7px;
-      padding: 6px 10px;
-      min-width: 92px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.12);
+      color: white;
+      min-width: 95px;
       text-align: center;
       backdrop-filter: blur(4px);
     }
 
-    .main {
-      max-width: 1540px;
-      margin: 18px auto 30px;
-      padding: 0 20px;
-    }
-
-    .breaking {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 18px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-
-    .breaking-label {
-      background: var(--red);
-      color: white;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 46px;
-      font-size: 14px;
-    }
-
-    .ticker {
-      background: #121212;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      white-space: nowrap;
-      border-left: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .ticker-track {
-      display: inline-block;
-      padding-left: 100%;
-      animation: scroll 30s linear infinite;
-      color: #f2f2f2;
-      font-size: 15px;
+    .top-right select {
+      background: #fff;
+      color: #111;
+      min-width: 132px;
       font-weight: 700;
     }
 
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+    .main {
+      max-width: 1520px;
+      margin: 22px auto;
+      padding: 0 22px 34px;
     }
 
     .section-title {
-      font-size: 29px;
+      font-size: 30px;
       font-weight: 900;
-      letter-spacing: -0.03em;
-      margin: 6px 0 16px;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
     }
 
     .tiles {
@@ -156,114 +119,142 @@
     .tile {
       position: relative;
       display: block;
-      min-height: 320px;
-      border-radius: var(--card-radius);
-      overflow: hidden;
       text-decoration: none;
       color: white;
+      overflow: hidden;
+      border-radius: 8px;
+      min-height: 310px;
       background-size: cover;
       background-position: center;
-      box-shadow: var(--shadow);
+      box-shadow: var(--card-shadow);
       border: 1px solid var(--border);
       transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
 
     .tile:hover {
       transform: translateY(-4px);
-      box-shadow: 0 18px 38px rgba(0,0,0,0.44);
+      box-shadow: 0 18px 34px rgba(0,0,0,0.42);
     }
 
     .tile::before {
       content: "";
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0.88) 100%);
+      background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.18) 32%, rgba(0,0,0,0.82) 100%);
     }
 
     .tile::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(200,15,23,0.28), rgba(0,0,0,0));
+      background: linear-gradient(135deg, rgba(196,0,18,0.24), rgba(0,0,0,0));
       pointer-events: none;
     }
 
-    .tile-large { grid-column: span 4; }
-    .tile-small { grid-column: span 6; min-height: 220px; }
-
     .tile-content {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: auto 0 0 0;
       padding: 20px;
-      z-index: 2;
+      z-index: 1;
     }
 
-    .kicker {
+    .tile-kicker {
       display: inline-block;
-      background: var(--red);
-      padding: 6px 9px;
-      border-radius: 4px;
+      background: rgba(196,0,18,0.92);
+      color: white;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      padding: 6px 8px;
+      border-radius: 3px;
       margin-bottom: 10px;
     }
 
     .tile h2 {
-      font-size: clamp(24px, 2vw, 34px);
+      font-size: 32px;
       line-height: 1.02;
-      letter-spacing: -0.03em;
       font-weight: 900;
       margin-bottom: 8px;
-      text-shadow: 0 3px 18px rgba(0,0,0,0.34);
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.28);
     }
 
     .tile p {
       font-size: 15px;
       line-height: 1.35;
-      opacity: 0.97;
+      opacity: 0.98;
       max-width: 92%;
     }
 
-    .helper {
-      margin-top: 16px;
-      color: #bbbbbb;
-      font-size: 13px;
-      line-height: 1.5;
+    .tile.equal { grid-column: span 4; }
+    .tile.small { grid-column: span 6; min-height: 220px; }
+
+    .news90 {
+      background-image:
+        linear-gradient(135deg, rgba(180, 0, 20, 0.20), rgba(0, 0, 0, 0.12)),
+        url('news90.png');
     }
 
-    @media (max-width: 1150px) {
+    .news1920 {
+      background-image:
+        linear-gradient(135deg, rgba(180, 0, 20, 0.26), rgba(0, 0, 0, 0.15)),
+        url('https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1400&q=80');
+    }
+
+    .wetter {
+      background-image:
+        linear-gradient(135deg, rgba(180, 0, 20, 0.24), rgba(0, 0, 0, 0.18)),
+        url('https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80');
+    }
+
+    .programm {
+      background-image:
+        linear-gradient(135deg, rgba(180, 0, 20, 0.22), rgba(0, 0, 0, 0.18)),
+        url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80');
+    }
+
+    .google {
+      background-image:
+        linear-gradient(135deg, rgba(180, 0, 20, 0.20), rgba(0, 0, 0, 0.18)),
+        url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80');
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: #9a9a9a;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1180px) {
       .topbar {
         grid-template-columns: 1fr;
         text-align: center;
       }
-      .logo-wrap, .meta {
-        display: flex;
+
+      .logo-box,
+      .top-right {
         justify-content: center;
       }
-      .tile-large, .tile-small {
+
+      .tile.equal,
+      .tile.small {
         grid-column: span 12;
-      }
-      .breaking {
-        grid-template-columns: 1fr;
       }
     }
 
     @media (max-width: 640px) {
-      .main { padding: 0 12px; }
+      .main { padding: 0 14px 24px; }
       .tile { min-height: 260px; }
-      .tile-small { min-height: 190px; }
-      .ticker-track { animation-duration: 22s; }
+      .tile.small { min-height: 190px; }
+      .tile h2 { font-size: 26px; }
+      .headline h1 { font-size: 34px; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="logo-wrap">
+    <div class="logo-box">
       <img src="servustv-on-logo.png" alt="ServusTV On Logo">
     </div>
 
@@ -272,7 +263,9 @@
       <p>Die Top Nachrichten und das Wetter für Österreich</p>
     </div>
 
-    <div class="meta">
+    <div class="top-right">
+      <div class="meta-box" id="currentTime">--:--</div>
+
       <select id="citySelect">
         <option value="Salzburg" selected>Salzburg</option>
         <option value="Wien">Wien</option>
@@ -280,86 +273,62 @@
         <option value="Graz">Graz</option>
         <option value="Innsbruck">Innsbruck</option>
         <option value="Klagenfurt">Klagenfurt</option>
+        <option value="St. Pölten">St. Pölten</option>
+        <option value="Eisenstadt">Eisenstadt</option>
+        <option value="Bregenz">Bregenz</option>
       </select>
-      <div class="meta-box" id="currentTime">--:--</div>
+
       <div class="meta-box" id="sunrise">🌅 --:--</div>
       <div class="meta-box" id="sunset">🌇 --:--</div>
     </div>
   </header>
 
   <main class="main">
-    <section class="breaking">
-      <div class="breaking-label">Breaking</div>
-      <div class="ticker">
-        <div class="ticker-track">
-          Paketabgabe könnte für alle Pakete gelten  •  Freispruch im Wiener-Derby-Prozess  •  Happy Birthday, Fatou!  •  Orban droht Ablöse  •  Gespräche gescheitert  •  Irland: Sprit wird knapp  •
-        </div>
-      </div>
-    </section>
-
     <div class="section-title">Top Nachrichten</div>
 
     <section class="tiles">
-      <a class="tile tile-large" href="https://www.servustv.com/aktuelles/v/aaft895vwami4c3daw3k/" target="_blank" rel="noopener noreferrer"
-         style="background-image:
-           linear-gradient(135deg, rgba(180,0,20,0.20), rgba(0,0,0,0.12)),
-           url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1600&q=80');">
+      <a class="tile equal news90" href="https://www.servustv.com/aktuelles/v/aaft895vwami4c3daw3k/" target="_blank" rel="noopener noreferrer">
         <div class="tile-content">
-          <div class="kicker">ServusTV</div>
-          <h2>90 Sekunden News</h2>
-          <p>Aktuell verlinkt auf die neueste 90-Sekunden-Ausgabe, die du geschickt hast.</p>
+          <div class="tile-kicker">ServusTV</div>
+          <h2>Servus Nachrichten in 90 Sekunden</h2>
+          <p>Kompakter Überblick mit den wichtigsten Meldungen des Tages.</p>
         </div>
       </a>
 
-      <a class="tile tile-large" href="https://www.servustv.com/aktuelles/v/aais9qs7iazmln7iuahw/" target="_blank" rel="noopener noreferrer"
-         style="background-image:
-           linear-gradient(135deg, rgba(180,0,20,0.20), rgba(0,0,0,0.12)),
-           url('https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1600&q=80');">
+      <a class="tile equal news1920" href="https://www.servustv.com/aktuelles/v/aais9qs7iazmln7iuahw/" target="_blank" rel="noopener noreferrer">
         <div class="tile-content">
-          <div class="kicker">Nachrichten</div>
+          <div class="tile-kicker">Nachrichten</div>
           <h2>Servus Nachrichten 19:20</h2>
-          <p>Die Hauptausgabe mit Österreich-, Welt- und Politikthemen.</p>
+          <p>Die Hauptausgabe mit Politik, Österreich und internationalen Themen.</p>
         </div>
       </a>
 
-      <a class="tile tile-large" href="https://www.servustv.com/aktuelles/b/servus-wetter/aa-1tb7r1phs1w11/" target="_blank" rel="noopener noreferrer"
-         style="background-image:
-           linear-gradient(135deg, rgba(180,0,20,0.18), rgba(0,0,0,0.12)),
-           url('https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1600&q=80');">
+      <a class="tile equal wetter" href="https://www.servustv.com/aktuelles/b/servus-wetter/aa-1tb7r1phs1w11/" target="_blank" rel="noopener noreferrer">
         <div class="tile-content">
-          <div class="kicker">Wetter</div>
+          <div class="tile-kicker">Wetter</div>
           <h2>Servus Wetter</h2>
-          <p>Zum Wetter-Magazin mit aktuellen Prognosen und Österreich-Überblick.</p>
+          <p>Aktuelle Wetterlage, Prognosen und Überblick für Österreich.</p>
         </div>
       </a>
 
-      <a class="tile tile-small" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank" rel="noopener noreferrer"
-         style="background-image:
-           linear-gradient(135deg, rgba(180,0,20,0.18), rgba(0,0,0,0.12)),
-           url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=80');">
+      <a class="tile small programm" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank" rel="noopener noreferrer">
         <div class="tile-content">
-          <div class="kicker">Programm</div>
+          <div class="tile-kicker">Programm</div>
           <h2>ServusTV Programm</h2>
-          <p>Direkt zum aktuellen TV-Programm.</p>
+          <p>Heute im TV und direkt zum aktuellen Programmplan.</p>
         </div>
       </a>
 
-      <a class="tile tile-small" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" rel="noopener noreferrer"
-         style="background-image:
-           linear-gradient(135deg, rgba(180,0,20,0.15), rgba(0,0,0,0.10)),
-           url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80');">
+      <a class="tile small google" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" rel="noopener noreferrer">
         <div class="tile-content">
-          <div class="kicker">Google News</div>
+          <div class="tile-kicker">Google News</div>
           <h2>Top 5 Nachrichten</h2>
-          <p>Die wichtigsten Schlagzeilen des Tages im Überblick.</p>
+          <p>Die wichtigsten Schlagzeilen des Tages auf einen Blick.</p>
         </div>
       </a>
     </section>
 
-    <p class="helper">
-      Diese Version hat jetzt Live-Uhr, automatische Sonnenaufgang-/Sonnenuntergang-Zeiten für österreichische Städte, ein Breaking-Banner
-      und einen Auto-Reload alle 5 Minuten. Die 90-Sekunden-Kachel ist auf die aktuellste Folge gesetzt, die du geschickt hast.
-    </p>
+    <p class="footer-note">Diese Version enthält jetzt das echte 90-Sekunden-Vorschaubild, alle 9 Landeshauptstädte, die Uhr links von der Auswahl und automatische Sonnenzeiten.</p>
   </main>
 
   <script>
@@ -369,7 +338,10 @@
       "Linz": { lat: 48.3069, lon: 14.2858 },
       "Graz": { lat: 47.0707, lon: 15.4395 },
       "Innsbruck": { lat: 47.2692, lon: 11.4041 },
-      "Klagenfurt": { lat: 46.6365, lon: 14.3122 }
+      "Klagenfurt": { lat: 46.6365, lon: 14.3122 },
+      "St. Pölten": { lat: 48.2047, lon: 15.6241 },
+      "Eisenstadt": { lat: 47.8457, lon: 16.5233 },
+      "Bregenz": { lat: 47.5031, lon: 9.7471 }
     };
 
     function updateClock() {
@@ -384,7 +356,10 @@
     function formatHHMM(value) {
       if (!value) return "--:--";
       const date = new Date(value);
-      return date.toLocaleTimeString("de-AT", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString("de-AT", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     }
 
     async function updateSunTimes(city) {
