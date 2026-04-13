@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Das Wichtigste des Tages</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background: #f3f3f3; color: #111; }
+
+    .topbar {
+      background: linear-gradient(90deg, #c20d14 0%, #8b0008 100%);
+      min-height: 120px;
+      display: grid;
+      grid-template-columns: 150px 1fr 220px;
+      align-items: center;
+      padding: 20px;
+      color: white;
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .headline {
+      text-align: center;
+    }
+
+    .headline h1 {
+      font-size: 36px;
+    }
+
+    .headline p {
+      font-size: 16px;
+    }
+
+    .top-right {
+      text-align: right;
+    }
+
+    .main {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .tile {
+      background: linear-gradient(180deg, #d3131d, #89000a);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      display: block;
+      min-height: 150px;
+      transition: transform 0.2s;
+    }
+
+    .tile:hover {
+      transform: scale(1.03);
+    }
+
+    .tile h2 {
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 800px) {
+      .tiles {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">Servus ON</div>
+
+  <div class="headline">
+    <h1>Das Wichtigste des Tages</h1>
+    <p>Die Top Nachrichten und das Wetter für Österreich</p>
+  </div>
+
+  <div class="top-right">
+    Salzburg<br>🌅 06:20 | 🌇 19:55
+  </div>
+</header>
+
+<main class="main">
+  <div class="tiles">
+
+    <a class="tile" href="https://www.servustv.com/aktuelles/b/servus-nachrichten-in-90-sekunden/aaygf2urw6alqye42ijk/" target="_blank">
+      <h2>90 Sekunden News</h2>
+      <p>Schnelle Übersicht</p>
+    </a>
+
+    <a class="tile" href="https://www.servustv.com/aktuelles/v/aais9qs7iazmln7iuahw/" target="_blank">
+      <h2>Nachrichten 19:20</h2>
+      <p>Hauptausgabe</p>
+    </a>
+
+    <a class="tile" href="https://www.servustv.com/aktuelles/b/servus-wetter/aa-1tb7r1phs1w11/" target="_blank">
+      <h2>Wetter</h2>
+      <p>Aktuelle Lage</p>
+    </a>
+
+    <a class="tile" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank">
+      <h2>TV Programm</h2>
+      <p>Alle Sendungen</p>
+    </a>
+
+    <a class="tile" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank">
+      <h2>Top Google News</h2>
+      <p>Die wichtigsten News</p>
+    </a>
+
+  </div>
+</main>
+
+</body>
+</html>
