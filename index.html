@@ -3,72 +3,127 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>News Dashboard</title>
-
+<title>Das Wichtigste des Tages</title>
+<meta http-equiv="refresh" content="300">
 <style>
-body{margin:0;font-family:Arial;background:#000;color:white;}
-.header{background:#c40012;padding:20px;text-align:center;}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#c40012;
+  --dark-red:#8b000c;
+  --black-red:#650008;
+  --bg:#000;
+  --shadow:0 14px 32px rgba(0,0,0,.35);
+  --border:rgba(255,255,255,.08);
+}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
 
-/* Breaking Banner */
+/* TOPBAR */
+.topbar{
+  background:linear-gradient(90deg,var(--red) 0%,var(--dark-red) 65%,var(--black-red) 100%);
+  min-height:120px;
+  display:grid;
+  grid-template-columns:180px 1fr 420px;
+  align-items:center;
+  padding:16px 24px;
+  border-bottom:16px solid #540007;
+  gap:12px;
+}
+.logo img{
+  width:92px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.28);
+}
+.headline{text-align:center;}
+.headline h1{font-size:clamp(28px,3.6vw,52px);font-weight:900;letter-spacing:-.03em;}
+.headline p{font-size:clamp(13px,1.1vw,18px);font-weight:600;}
+.meta{
+  display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;align-items:center;
+}
+.meta-box, .meta select{
+  padding:6px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.12);color:#fff;font-weight:700;
+}
+.meta select{background:#fff;color:#111;}
+
+/* BREAKING */
 .banner{
-display:flex;
-background:#111;
-overflow:hidden;
-border-bottom:2px solid #c40012;
+  display:flex;background:#111;border-bottom:2px solid var(--red);overflow:hidden;
 }
-.banner-label{
-background:#c40012;
-padding:10px 15px;
-font-weight:bold;
-}
+.banner-label{background:var(--red);padding:10px 14px;font-weight:900;}
 .banner-track{
-white-space:nowrap;
-animation:scroll 20s linear infinite;
-padding:10px;
+  white-space:nowrap;animation:scroll 22s linear infinite;padding:10px;
 }
-@keyframes scroll{
-0%{transform:translateX(100%);}
-100%{transform:translateX(-100%);}
+@keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+
+/* GRID */
+.main{max-width:1500px;margin:20px auto;padding:0 20px;}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px;}
+.tile{
+  position:relative;border-radius:10px;overflow:hidden;text-decoration:none;color:#fff;
+  background-size:cover;background-position:center;min-height:280px;display:block;
+  box-shadow:var(--shadow);border:1px solid var(--border);
 }
-
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px;padding:20px;}
-
-.tile{position:relative;border-radius:10px;overflow:hidden;text-decoration:none;color:white;
-background-size:cover;background-position:center;min-height:280px;display:block;}
-
 .tile.large{grid-column:span 4;}
 .tile.small{grid-column:span 6;min-height:200px;}
+.overlay{
+  position:absolute;bottom:0;width:100%;padding:15px;
+  background:linear-gradient(transparent,rgba(0,0,0,.85));
+}
 
-.overlay{position:absolute;bottom:0;width:100%;padding:15px;
-background:linear-gradient(transparent,rgba(0,0,0,0.85));}
-
+/* GOOGLE HEADLINES */
 .headlines{
-position:absolute;
-top:10px;
-right:10px;
-background:rgba(0,0,0,0.7);
-padding:10px;
-border-radius:8px;
-font-size:13px;
-max-width:60%;
+  position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);
+  padding:10px;border-radius:8px;font-size:13px;max-width:60%;
 }
 .headlines div{margin-bottom:6px;}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .topbar{grid-template-columns:1fr;text-align:center;}
+  .meta{justify-content:center;}
+  .tile.large,.tile.small{grid-column:span 12;}
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<h1>Das Wichtigste des Tages</h1>
-</div>
+<header class="topbar">
+  <div class="logo">
+    <img src="servustv-on-logo.png">
+  </div>
+
+  <div class="headline">
+    <h1>Das Wichtigste des Tages</h1>
+    <p>Die Top Nachrichten und das Wetter für Österreich</p>
+  </div>
+
+  <div class="meta">
+    <div class="meta-box" id="time">--:--</div>
+
+    <select id="city">
+      <option>Salzburg</option>
+      <option>Wien</option>
+      <option>Linz</option>
+      <option>Graz</option>
+      <option>Innsbruck</option>
+      <option>Klagenfurt</option>
+      <option>St. Pölten</option>
+      <option>Eisenstadt</option>
+      <option>Bregenz</option>
+    </select>
+
+    <div class="meta-box" id="sunrise">🌅 --:--</div>
+    <div class="meta-box" id="sunset">🌇 --:--</div>
+  </div>
+</header>
 
 <div class="banner">
-<div class="banner-label">Breaking</div>
-<div class="banner-track">
-Topmeldung 1 • Topmeldung 2 • Topmeldung 3 • Topmeldung 4 •
-</div>
+  <div class="banner-label">Breaking</div>
+  <div class="banner-track">
+    Topmeldung 1 • Topmeldung 2 • Topmeldung 3 • Topmeldung 4 •
+  </div>
 </div>
 
+<main class="main">
 <div class="grid">
 
 <a class="tile large" href="https://www.servustv.com/aktuelles/v/aaft895vwami4c3daw3k/" target="_blank"
@@ -104,6 +159,41 @@ style="background-image:url('https://images.unsplash.com/photo-1504384308090-c89
 </a>
 
 </div>
+</main>
+
+<script>
+function updateTime(){
+  const now=new Date();
+  document.getElementById("time").textContent=now.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+}
+setInterval(updateTime,20000);updateTime();
+
+const coords={
+"Salzburg":[47.8095,13.0550],
+"Wien":[48.2082,16.3738],
+"Linz":[48.3069,14.2858],
+"Graz":[47.0707,15.4395],
+"Innsbruck":[47.2692,11.4041],
+"Klagenfurt":[46.6365,14.3122],
+"St. Pölten":[48.2047,15.6241],
+"Eisenstadt":[47.8457,16.5233],
+"Bregenz":[47.5031,9.7471]
+};
+
+async function updateSun(city){
+  const c=coords[city];
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&daily=sunrise,sunset&timezone=Europe%2FBerlin`;
+  const res=await fetch(url);const data=await res.json();
+  const sr=new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+  const ss=new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("sunrise").textContent="🌅 "+sr;
+  document.getElementById("sunset").textContent="🌇 "+ss;
+}
+
+const citySel=document.getElementById("city");
+citySel.addEventListener("change",()=>updateSun(citySel.value));
+updateSun(citySel.value);
+</script>
 
 </body>
 </html>
