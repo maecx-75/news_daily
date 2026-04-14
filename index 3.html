@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<style>
+body{background:#000;color:#fff;font-family:Arial}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px}
+.tile{height:200px;background-size:cover;position:relative;border-radius:10px;overflow:hidden;text-decoration:none;color:#fff}
+.overlay{position:absolute;bottom:0;width:100%;background:rgba(0,0,0,0.7);padding:10px}
+.live{position:absolute;top:10px;left:10px;background:red;padding:5px 10px;border-radius:20px;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="grid">
+
+<a class="tile" style="background-image:url('news90.png')" href="#">
+<div class="overlay">90 Sekunden News</div>
+</a>
+
+<a class="tile" style="background-image:url('news1920.png')" href="#">
+<div class="overlay">Nachrichten 19:20</div>
+</a>
+
+<a class="tile" style="background-image:url('wetter.png')" href="#">
+<div class="overlay">Servus Wetter</div>
+</a>
+
+<a class="tile" style="background-image:url('wetter-live.jpg')" href="#">
+<div class="live">LIVE</div>
+<div class="overlay">Wetterpanorama</div>
+</a>
+
+</div>
+
+</body>
+</html>
