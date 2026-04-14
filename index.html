@@ -157,10 +157,8 @@ style="background-image:url('https://images.unsplash.com/photo-1504384308090-c89
 <div class="overlay"><h2>Top Nachrichten</h2></div>
 </a>
 
-<a class="tile small" href="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" target="_blank"
-style="background-image:
-linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.18)),
-url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80')">
+<a class="tile small" id="liveTile" href="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" target="_blank"
+style="background-image:url('wetter-live.jpg')">
 <div class="live-badge"><span class="live-dot"></span>Live</div>
 <div class="overlay"><h2>Wetterpanorama Live</h2></div>
 </a>
@@ -226,6 +224,14 @@ async function loadHeadlines(){
   }
 }
 loadHeadlines();
+
+// Pseudo-live: reload the weather panorama image every 10 seconds
+function refreshLiveImage(){
+  const liveTile = document.getElementById("liveTile");
+  const ts = new Date().getTime();
+  liveTile.style.backgroundImage = "url('wetter-live.jpg?t=" + ts + "')";
+}
+setInterval(refreshLiveImage, 10000);
 </script>
 
 </body>
