@@ -16,8 +16,6 @@
   --border:rgba(255,255,255,.08);
 }
 body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
-
-/* TOPBAR */
 .topbar{
   background:linear-gradient(90deg,var(--red) 0%,var(--dark-red) 65%,var(--black-red) 100%);
   min-height:120px;
@@ -37,13 +35,11 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
 .meta{
   display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;align-items:center;
 }
-.meta-box, .meta select{
+.meta-box,.meta select{
   padding:6px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.2);
   background:rgba(255,255,255,.12);color:#fff;font-weight:700;
 }
 .meta select{background:#fff;color:#111;}
-
-/* BREAKING */
 .banner{
   display:flex;background:#111;border-bottom:2px solid var(--red);overflow:hidden;
 }
@@ -52,8 +48,6 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
   white-space:nowrap;animation:scroll 22s linear infinite;padding:10px;
 }
 @keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
-
-/* GRID */
 .main{max-width:1500px;margin:20px auto;padding:0 20px;}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px;}
 .tile{
@@ -62,20 +56,16 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
   box-shadow:var(--shadow);border:1px solid var(--border);
 }
 .tile.large{grid-column:span 4;}
-.tile.small{grid-column:span 6;min-height:200px;}
+.tile.small{grid-column:span 4;min-height:200px;}
 .overlay{
   position:absolute;bottom:0;width:100%;padding:15px;
   background:linear-gradient(transparent,rgba(0,0,0,.85));
 }
-
-/* GOOGLE HEADLINES */
 .headlines{
   position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);
   padding:10px;border-radius:8px;font-size:13px;max-width:60%;
 }
 .headlines div{margin-bottom:6px;}
-
-/* RESPONSIVE */
 @media(max-width:1100px){
   .topbar{grid-template-columns:1fr;text-align:center;}
   .meta{justify-content:center;}
@@ -83,12 +73,11 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
 }
 </style>
 </head>
-
 <body>
 
 <header class="topbar">
   <div class="logo">
-    <img src="servustv-on-logo.png">
+    <img src="servustv-on-logo.png" alt="ServusTV On Logo">
   </div>
 
   <div class="headline">
@@ -117,10 +106,8 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
 </header>
 
 <div class="banner">
-  <div class="banner-label">Breaking</div>
-  <div class="banner-track">
-    Topmeldung 1 • Topmeldung 2 • Topmeldung 3 • Topmeldung 4 •
-  </div>
+  <div class="banner-label">Topmeldung 90 Sekunden:</div>
+  <div class="banner-track" id="bannerText">Lade Topmeldung …</div>
 </div>
 
 <main class="main">
@@ -142,20 +129,25 @@ style="background-image:url('wetter.png')">
 </a>
 
 <a class="tile small" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank"
-style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba')">
+style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80')">
 <div class="overlay"><h2>TV Programm</h2></div>
 </a>
 
 <a class="tile small" href="https://news.google.com/" target="_blank"
-style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d')">
+style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
 
-<div class="headlines">
-<div>• Schlagzeile 1</div>
-<div>• Schlagzeile 2</div>
-<div>• Schlagzeile 3</div>
+<div class="headlines" id="googleHeadlines">
+<div>• Lade Schlagzeile 1 …</div>
+<div>• Lade Schlagzeile 2 …</div>
+<div>• Lade Schlagzeile 3 …</div>
 </div>
 
 <div class="overlay"><h2>Top Nachrichten</h2></div>
+</a>
+
+<a class="tile small" href="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" target="_blank"
+style="background-image:url('https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80')">
+<div class="overlay"><h2>Wetterpanorama Live</h2></div>
 </a>
 
 </div>
@@ -166,7 +158,8 @@ function updateTime(){
   const now=new Date();
   document.getElementById("time").textContent=now.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
 }
-setInterval(updateTime,20000);updateTime();
+setInterval(updateTime,20000);
+updateTime();
 
 const coords={
 "Salzburg":[47.8095,13.0550],
@@ -183,16 +176,41 @@ const coords={
 async function updateSun(city){
   const c=coords[city];
   const url=`https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&daily=sunrise,sunset&timezone=Europe%2FBerlin`;
-  const res=await fetch(url);const data=await res.json();
-  const sr=new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-  const ss=new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-  document.getElementById("sunrise").textContent="🌅 "+sr;
-  document.getElementById("sunset").textContent="🌇 "+ss;
+  try{
+    const res=await fetch(url);
+    const data=await res.json();
+    const sr=new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+    const ss=new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+    document.getElementById("sunrise").textContent="🌅 "+sr;
+    document.getElementById("sunset").textContent="🌇 "+ss;
+  }catch(e){
+    document.getElementById("sunrise").textContent="🌅 --:--";
+    document.getElementById("sunset").textContent="🌇 --:--";
+  }
 }
 
 const citySel=document.getElementById("city");
 citySel.addEventListener("change",()=>updateSun(citySel.value));
 updateSun(citySel.value);
+
+async function loadHeadlines(){
+  try{
+    const res=await fetch("headlines.json?ts="+Date.now());
+    const data=await res.json();
+
+    document.getElementById("bannerText").textContent = data.topmeldung90 || "Keine Topmeldung eingetragen.";
+
+    const box = document.getElementById("googleHeadlines");
+    const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
+    box.innerHTML = items.length
+      ? items.map(text => `<div>• ${text}</div>`).join("")
+      : "<div>• Keine Schlagzeilen eingetragen.</div>";
+  }catch(e){
+    document.getElementById("bannerText").textContent = "Topmeldung konnte nicht geladen werden.";
+    document.getElementById("googleHeadlines").innerHTML = "<div>• Schlagzeilen konnten nicht geladen werden.</div>";
+  }
+}
+loadHeadlines();
 </script>
 
 </body>
