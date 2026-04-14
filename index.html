@@ -2,305 +2,32 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Das Wichtigste des Tages</title>
-<meta http-equiv="refresh" content="300">
+<title>Dashboard</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --red:#c40012;
-  --dark-red:#8b000c;
-  --black-red:#650008;
-  --bg:#000;
-  --shadow:0 14px 32px rgba(0,0,0,.35);
-  --border:rgba(255,255,255,.08);
-}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
-.topbar{
-  background:linear-gradient(90deg,var(--red) 0%,var(--dark-red) 65%,var(--black-red) 100%);
-  min-height:120px;
-  display:grid;
-  grid-template-columns:180px 1fr 420px;
-  align-items:center;
-  padding:16px 24px;
-  border-bottom:16px solid #540007;
-  gap:12px;
-}
-.logo img{
-  width:92px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.28);
-}
-.headline{text-align:center;}
-.headline h1{font-size:clamp(28px,3.6vw,52px);font-weight:900;letter-spacing:-.03em;}
-.headline p{font-size:clamp(13px,1.1vw,18px);font-weight:600;}
-.meta{
-  display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;align-items:center;
-}
-.meta-box,.meta select{
-  padding:6px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.2);
-  background:rgba(255,255,255,.12);color:#fff;font-weight:700;
-}
-.meta select{background:#fff;color:#111;}
-.banner{
-  display:flex;background:#111;border-bottom:2px solid var(--red);overflow:hidden;
-}
-.banner-label{background:var(--red);padding:10px 14px;font-weight:900;}
-.banner-track{
-  white-space:nowrap;animation:scroll 22s linear infinite;padding:10px;
-}
-@keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
-@keyframes pulse{0%{opacity:1;}50%{opacity:.45;}100%{opacity:1;}}
-.main{max-width:1500px;margin:20px auto;padding:0 20px;}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px;}
-.tile{
-  position:relative;border-radius:10px;overflow:hidden;text-decoration:none;color:#fff;
-  background-size:cover;background-position:center;min-height:280px;display:block;
-  box-shadow:var(--shadow);border:1px solid var(--border);
-}
-.tile.large{grid-column:span 4;}
-.tile.small{grid-column:span 4;min-height:220px;}
-.overlay{
-  position:absolute;bottom:0;width:100%;padding:15px;
-  background:linear-gradient(transparent,rgba(0,0,0,.88));
-}
-.headlines{
-  position:absolute;top:10px;right:10px;background:rgba(0,0,0,.72);
-  padding:10px;border-radius:8px;font-size:13px;max-width:60%;
-}
-.headlines div{margin-bottom:6px;}
-.live-badge{
-  position:absolute;top:12px;left:12px;z-index:2;
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(196,0,18,.95);color:#fff;
-  font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
-  padding:8px 10px;border-radius:999px;
-  box-shadow:0 8px 18px rgba(0,0,0,.28);
-}
-.live-dot{
-  width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite;
-}
-.play-badge{
-  position:absolute;top:12px;left:12px;z-index:2;
-  width:56px;height:56px;border-radius:50%;
-  background:rgba(196,0,18,.95);display:flex;align-items:center;justify-content:center;
-  box-shadow:0 8px 18px rgba(0,0,0,.28);
-  font-size:24px;font-weight:900;
-}
-.video-tile{
-  background-image:
-    linear-gradient(135deg, rgba(180, 0, 20, 0.24), rgba(0, 0, 0, 0.18)),
-    url('https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=1400&q=80');
-}
-.video-modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.82);
-  display:none;align-items:center;justify-content:center;z-index:9999;padding:24px;
-}
-.video-modal.active{display:flex;}
-.video-box{
-  width:min(100%, 1000px);background:#111;border-radius:14px;overflow:hidden;
-  box-shadow:0 18px 40px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);
-}
-.video-top{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:12px 16px;background:#181818;font-weight:800;
-}
-.video-close{
-  border:0;background:var(--red);color:#fff;border-radius:8px;padding:8px 12px;
-  font-weight:800;cursor:pointer;
-}
-.video-player{
-  width:100%;display:block;background:#000;max-height:78vh;
-}
-@media(max-width:1100px){
-  .topbar{grid-template-columns:1fr;text-align:center;}
-  .meta{justify-content:center;}
-  .tile.large,.tile.small{grid-column:span 12;}
-}
+body{background:#000;color:#fff;font-family:Arial}
+.tile{width:300px;height:200px;background-size:cover;position:relative;border-radius:10px;overflow:hidden}
+.overlay{position:absolute;bottom:0;width:100%;background:rgba(0,0,0,0.7);padding:10px}
+.play{position:absolute;top:10px;left:10px;background:red;color:#fff;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:24px}
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="logo">
-    <img src="servustv-on-logo.png" alt="ServusTV On Logo">
-  </div>
-
-  <div class="headline">
-    <h1>Das Wichtigste des Tages</h1>
-    <p>Die Top Nachrichten und das Wetter für Österreich</p>
-  </div>
-
-  <div class="meta">
-    <div class="meta-box" id="time">--:--</div>
-
-    <select id="city">
-      <option>Salzburg</option>
-      <option>Wien</option>
-      <option>Linz</option>
-      <option>Graz</option>
-      <option>Innsbruck</option>
-      <option>Klagenfurt</option>
-      <option>St. Pölten</option>
-      <option>Eisenstadt</option>
-      <option>Bregenz</option>
-    </select>
-
-    <div class="meta-box" id="sunrise">🌅 --:--</div>
-    <div class="meta-box" id="sunset">🌇 --:--</div>
-  </div>
-</header>
-
-<div class="banner">
-  <div class="banner-label">Topmeldung 90 Sekunden:</div>
-  <div class="banner-track" id="bannerText">Lade Topmeldung …</div>
-</div>
-
-<main class="main">
-<div class="grid">
-
-<a class="tile large" href="https://www.servustv.com/aktuelles/v/aaft895vwami4c3daw3k/" target="_blank"
-style="background-image:url('news90.png')">
-<div class="overlay"><h2>90 Sekunden News</h2></div>
+<a class="tile" href="#" onclick="openVideo(event)" style="background-image:url('thumbnail.jpg')">
+<div class="play">▶</div>
+<div class="overlay">Video des Tages<br>Nagelschneiden bei Murmeltieren</div>
 </a>
 
-<a class="tile large" href="https://www.servustv.com/aktuelles/v/aais9qs7iazmln7iuahw/" target="_blank"
-style="background-image:url('news1920.png')">
-<div class="overlay"><h2>Nachrichten 19:20</h2></div>
-</a>
-
-<a class="tile large" href="https://www.servustv.com/aktuelles/b/servus-wetter/aa-1tb7r1phs1w11/" target="_blank"
-style="background-image:url('wetter.png')">
-<div class="overlay"><h2>Servus Wetter</h2></div>
-</a>
-
-<a class="tile small" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank"
-style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80')">
-<div class="overlay"><h2>TV Programm</h2></div>
-</a>
-
-<a class="tile small" href="https://news.google.com/" target="_blank"
-style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
-<div class="headlines" id="googleHeadlines">
-<div>• Lade Schlagzeile 1 …</div>
-<div>• Lade Schlagzeile 2 …</div>
-<div>• Lade Schlagzeile 3 …</div>
-</div>
-<div class="overlay"><h2>Top Nachrichten</h2></div>
-</a>
-
-<a class="tile small" id="liveTile" href="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" target="_blank"
-style="background-image:url('wetter-live.jpg')">
-<div class="live-badge"><span class="live-dot"></span>Live</div>
-<div class="overlay"><h2>Wetterpanorama Live</h2></div>
-</a>
-
-<a class="tile small video-tile" href="#" id="videoTile">
-<div class="play-badge">▶</div>
-<div class="overlay"><h2>Video des Tages</h2><p>Nagelschneiden bei Murmeltieren</p></div>
-</a>
-
-</div>
-</main>
-
-<div class="video-modal" id="videoModal">
-  <div class="video-box">
-    <div class="video-top">
-      <div>Video des Tages: Nagelschneiden bei Murmeltieren</div>
-      <button class="video-close" id="closeVideo">Schließen</button>
-    </div>
-    <video class="video-player" id="dailyVideo" controls>
-      <source src="video-des-tages.mp4" type="video/mp4">
-      Dein Browser unterstützt dieses Video nicht.
-    </video>
-  </div>
+<div id="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center">
+<video controls autoplay style="max-width:90%">
+<source src="video.mp4" type="video/mp4">
+</video>
 </div>
 
 <script>
-function updateTime(){
-  const now=new Date();
-  document.getElementById("time").textContent=now.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+function openVideo(e){
+e.preventDefault();
+document.getElementById('modal').style.display='flex';
 }
-setInterval(updateTime,20000);
-updateTime();
-
-const coords={
-"Salzburg":[47.8095,13.0550],
-"Wien":[48.2082,16.3738],
-"Linz":[48.3069,14.2858],
-"Graz":[47.0707,15.4395],
-"Innsbruck":[47.2692,11.4041],
-"Klagenfurt":[46.6365,14.3122],
-"St. Pölten":[48.2047,15.6241],
-"Eisenstadt":[47.8457,16.5233],
-"Bregenz":[47.5031,9.7471]
-};
-
-async function updateSun(city){
-  const c=coords[city];
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&daily=sunrise,sunset&timezone=Europe%2FBerlin`;
-  try{
-    const res=await fetch(url);
-    const data=await res.json();
-    const sr=new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-    const ss=new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-    document.getElementById("sunrise").textContent="🌅 "+sr;
-    document.getElementById("sunset").textContent="🌇 "+ss;
-  }catch(e){
-    document.getElementById("sunrise").textContent="🌅 --:--";
-    document.getElementById("sunset").textContent="🌇 --:--";
-  }
-}
-
-const citySel=document.getElementById("city");
-citySel.addEventListener("change",()=>updateSun(citySel.value));
-updateSun(citySel.value);
-
-async function loadHeadlines(){
-  try{
-    const res=await fetch("headlines.json?ts="+Date.now());
-    const data=await res.json();
-    document.getElementById("bannerText").textContent = data.topmeldung90 || "Keine Topmeldung eingetragen.";
-    const box = document.getElementById("googleHeadlines");
-    const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
-    box.innerHTML = items.length
-      ? items.map(text => `<div>• ${text}</div>`).join("")
-      : "<div>• Keine Schlagzeilen eingetragen.</div>";
-  }catch(e){
-    document.getElementById("bannerText").textContent = "Topmeldung konnte nicht geladen werden.";
-    document.getElementById("googleHeadlines").innerHTML = "<div>• Schlagzeilen konnten nicht geladen werden.</div>";
-  }
-}
-loadHeadlines();
-
-function refreshLiveImage(){
-  const liveTile = document.getElementById("liveTile");
-  const ts = new Date().getTime();
-  liveTile.style.backgroundImage = "url('wetter-live.jpg?t=" + ts + "')";
-}
-setInterval(refreshLiveImage, 10000);
-
-const videoTile = document.getElementById("videoTile");
-const videoModal = document.getElementById("videoModal");
-const closeVideo = document.getElementById("closeVideo");
-const dailyVideo = document.getElementById("dailyVideo");
-
-videoTile.addEventListener("click", function(e){
-  e.preventDefault();
-  videoModal.classList.add("active");
-  dailyVideo.currentTime = 0;
-  dailyVideo.play().catch(() => {});
-});
-
-closeVideo.addEventListener("click", function(){
-  videoModal.classList.remove("active");
-  dailyVideo.pause();
-});
-
-videoModal.addEventListener("click", function(e){
-  if(e.target === videoModal){
-    videoModal.classList.remove("active");
-    dailyVideo.pause();
-  }
-});
 </script>
 
 </body>
