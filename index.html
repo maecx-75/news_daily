@@ -78,6 +78,38 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff;}
 .live-dot{
   width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite;
 }
+.play-badge{
+  position:absolute;top:12px;left:12px;z-index:2;
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(196,0,18,.95);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 18px rgba(0,0,0,.28);
+  font-size:24px;font-weight:900;
+}
+.video-tile{
+  background-image:
+    linear-gradient(135deg, rgba(180, 0, 20, 0.24), rgba(0, 0, 0, 0.18)),
+    url('https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=1400&q=80');
+}
+.video-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);
+  display:none;align-items:center;justify-content:center;z-index:9999;padding:24px;
+}
+.video-modal.active{display:flex;}
+.video-box{
+  width:min(100%, 1000px);background:#111;border-radius:14px;overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);
+}
+.video-top{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;background:#181818;font-weight:800;
+}
+.video-close{
+  border:0;background:var(--red);color:#fff;border-radius:8px;padding:8px 12px;
+  font-weight:800;cursor:pointer;
+}
+.video-player{
+  width:100%;display:block;background:#000;max-height:78vh;
+}
 @media(max-width:1100px){
   .topbar{grid-template-columns:1fr;text-align:center;}
   .meta{justify-content:center;}
@@ -147,13 +179,11 @@ style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee
 
 <a class="tile small" href="https://news.google.com/" target="_blank"
 style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
-
 <div class="headlines" id="googleHeadlines">
 <div>• Lade Schlagzeile 1 …</div>
 <div>• Lade Schlagzeile 2 …</div>
 <div>• Lade Schlagzeile 3 …</div>
 </div>
-
 <div class="overlay"><h2>Top Nachrichten</h2></div>
 </a>
 
@@ -163,8 +193,26 @@ style="background-image:url('wetter-live.jpg')">
 <div class="overlay"><h2>Wetterpanorama Live</h2></div>
 </a>
 
+<a class="tile small video-tile" href="#" id="videoTile">
+<div class="play-badge">▶</div>
+<div class="overlay"><h2>Video des Tages</h2><p>Nagelschneiden bei Murmeltieren</p></div>
+</a>
+
 </div>
 </main>
+
+<div class="video-modal" id="videoModal">
+  <div class="video-box">
+    <div class="video-top">
+      <div>Video des Tages: Nagelschneiden bei Murmeltieren</div>
+      <button class="video-close" id="closeVideo">Schließen</button>
+    </div>
+    <video class="video-player" id="dailyVideo" controls>
+      <source src="video-des-tages.mp4" type="video/mp4">
+      Dein Browser unterstützt dieses Video nicht.
+    </video>
+  </div>
+</div>
 
 <script>
 function updateTime(){
@@ -210,9 +258,7 @@ async function loadHeadlines(){
   try{
     const res=await fetch("headlines.json?ts="+Date.now());
     const data=await res.json();
-
     document.getElementById("bannerText").textContent = data.topmeldung90 || "Keine Topmeldung eingetragen.";
-
     const box = document.getElementById("googleHeadlines");
     const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
     box.innerHTML = items.length
@@ -225,13 +271,36 @@ async function loadHeadlines(){
 }
 loadHeadlines();
 
-// Pseudo-live: reload the weather panorama image every 10 seconds
 function refreshLiveImage(){
   const liveTile = document.getElementById("liveTile");
   const ts = new Date().getTime();
   liveTile.style.backgroundImage = "url('wetter-live.jpg?t=" + ts + "')";
 }
 setInterval(refreshLiveImage, 10000);
+
+const videoTile = document.getElementById("videoTile");
+const videoModal = document.getElementById("videoModal");
+const closeVideo = document.getElementById("closeVideo");
+const dailyVideo = document.getElementById("dailyVideo");
+
+videoTile.addEventListener("click", function(e){
+  e.preventDefault();
+  videoModal.classList.add("active");
+  dailyVideo.currentTime = 0;
+  dailyVideo.play().catch(() => {});
+});
+
+closeVideo.addEventListener("click", function(){
+  videoModal.classList.remove("active");
+  dailyVideo.pause();
+});
+
+videoModal.addEventListener("click", function(e){
+  if(e.target === videoModal){
+    videoModal.classList.remove("active");
+    dailyVideo.pause();
+  }
+});
 </script>
 
 </body>
