@@ -1,1 +1,1 @@
-Version mit 2 Änderungen: Nachrichten 19:20 auf Übersichtsseite, Servus Wetter mit neuem Bild und Wetter-Übersichtslink.
+Version mit neuen Bildern: 19:20 nutzt festen neuen Link + OMV-Bild, 90 Sekunden nutzt Flugzeug-Bild.
