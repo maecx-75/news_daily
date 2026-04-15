@@ -1,0 +1,42 @@
+name: Komplett automatisch Dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: 90 Sekunden updaten
+        run: python scripts/update_news90.py
+
+      - name: Google Headlines updaten
+        run: python scripts/update_google_headlines.py
+
+      - name: Änderungen committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add headlines.json news90.png
+          git diff --cached --quiet && exit 0
+          git commit -m "Auto-update dashboard"
+          git push
