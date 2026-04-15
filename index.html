@@ -45,6 +45,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   position:absolute;bottom:0;width:100%;padding:15px;
   background:linear-gradient(transparent,rgba(0,0,0,.88))
 }
+.sub{font-size:14px;opacity:.95;margin-top:6px}
 .headlines{
   position:absolute;top:10px;right:10px;background:rgba(0,0,0,.72);
   padding:10px;border-radius:8px;font-size:13px;max-width:60%;min-width:240px
@@ -90,8 +91,11 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
 <main class="main">
   <div class="grid">
-    <a class="tile large" href="https://www.servustv.com/aktuelles/b/servus-nachrichten-in-90-sekunden/aaygf2urw6alqye42ijk/" target="_blank" style="background-image:url('news90.png')">
-      <div class="overlay"><h2>90 Sekunden News</h2></div>
+    <a class="tile large" id="news90Tile" href="https://www.servustv.com/aktuelles/b/servus-nachrichten-in-90-sekunden/aaygf2urw6alqye42ijk/" target="_blank" style="background-image:url('news90.png')">
+      <div class="overlay">
+        <h2>90 Sekunden News</h2>
+        <div class="sub" id="news90Title">Lade neuesten Titel …</div>
+      </div>
     </a>
 
     <a class="tile large" href="https://www.servustv.com/aktuelles/v/aaijim4vr1uern9iu188/" target="_blank" style="background-image:url('news1920.png')">
@@ -159,11 +163,14 @@ async function loadHeadlines(){
     const res=await fetch("headlines.json?ts="+Date.now());
     const data=await res.json();
     document.getElementById("bannerText").textContent = data.topmeldung90 || "Keine Topmeldung eingetragen.";
+    if (data.news90_link) document.getElementById("news90Tile").href = data.news90_link;
+    document.getElementById("news90Title").textContent = data.news90_title || "Neuester Titel nicht verfügbar.";
     const box = document.getElementById("googleHeadlines");
     const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
     box.innerHTML = '<div class="title">Top Schlagzeilen</div>' + (items.length ? items.map(text => `<div class="item">• ${text}</div>`).join("") : '<div class="item">• Keine Schlagzeilen eingetragen.</div>');
   }catch(e){
     document.getElementById("bannerText").textContent = "Topmeldung konnte nicht geladen werden.";
+    document.getElementById("news90Title").textContent = "Titel konnte nicht geladen werden.";
     document.getElementById("googleHeadlines").innerHTML = '<div class="title">Top Schlagzeilen</div><div class="item">• Schlagzeilen konnten nicht geladen werden.</div>';
   }
 }

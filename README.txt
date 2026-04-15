@@ -1,1 +1,1 @@
-Saubere Version mit funktionierendem Layout und automatischen 3 Google-News-Headlines via GitHub Actions.
+Komplett automatische Version:\n- 90 Sekunden: Titel + Link + Vorschaubild automatisch\n- Google News: 3 Headlines automatisch\n- Workflow liegt in .github/workflows/dashboard_auto.yml\n- Falls .github im Finder versteckt ist, findest du den gleichen Inhalt auch in VISIBLE_WORKFLOW_COPY/dashboard_auto.yml.txt\n- Du musst ALLE Dateien aus der ZIP hochladen.\n
