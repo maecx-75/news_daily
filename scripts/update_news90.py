@@ -38,28 +38,33 @@ def extract_topics(video_url):
 
     text = s.get_text("\n", strip=True)
 
+    best_line = ""
+
     for line in text.split("\n"):
-        if "Die wichtigsten News direkt aus der Redaktion" in line and " | " in line:
-            parts = [p.strip() for p in line.split("|")]
+        if "|" in line:
+            # filter Müll raus
+            if "ServusTV" in line:
+                continue
+            if "Mehr anzeigen" in line:
+                continue
+            if len(line) < 30:
+                continue
 
-            cleaned = []
-            for p in parts:
-                if not p:
-                    continue
-                if re.match(r"^\d{1,2}\.\d{1,2}\.$", p):
-                    continue
-                if re.match(r"^\d{1,2}:\d{2}\s*Uhr$", p):
-                    continue
-                if p == "Die wichtigsten News direkt aus der Redaktion":
-                    continue
+            # nimm die längste sinnvolle Zeile
+            if line.count("|") >= 2:
+                if len(line) > len(best_line):
+                    best_line = line
 
-                p = p.replace("Mehr anzeigen", "").strip()
+    if best_line:
+        parts = [p.strip() for p in best_line.split("|")]
 
-                if p:
-                    cleaned.append(p)
+        # nur echte Themen behalten
+        cleaned = []
+        for p in parts:
+            if len(p) > 10:
+                cleaned.append(p)
 
-            if cleaned:
-                return " | ".join(cleaned[:3])
+        return " | ".join(cleaned[:3])
 
     return ""
 
