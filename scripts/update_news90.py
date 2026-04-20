@@ -38,13 +38,30 @@ def extract_topics(video_url):
 
     text = s.get_text("\n", strip=True)
 
-    for line in text.split("\n"):
-        if " | " in line:
-            parts = [p.strip() for p in line.split("|")]
-            if len(parts) >= 2:
-                return " | ".join(parts[:3])
+   for line in text.split("\n"):
+    if "Die wichtigsten News direkt aus der Redaktion" in line and " | " in line:
+        parts = [p.strip() for p in line.split("|")]
 
-    return ""
+        cleaned = []
+        for p in parts:
+            if not p:
+                continue
+            if re.match(r"^\d{1,2}\.\d{1,2}\.$", p):
+                continue
+            if re.match(r"^\d{1,2}:\d{2}\s*Uhr$", p):
+                continue
+            if p == "Die wichtigsten News direkt aus der Redaktion":
+                continue
+
+            p = p.replace("Mehr anzeigen", "").strip()
+
+            if p:
+                cleaned.append(p)
+
+        if cleaned:
+            return " | ".join(cleaned[:3])
+
+return ""
 
 def find_image(video_url):
     r = requests.get(video_url, headers=HEADERS, timeout=25)
