@@ -141,7 +141,7 @@ async function loadHeadlines(){
   try{
     const res=await fetch("headlines.json?ts="+Date.now());
     const data=await res.json();
-    document.getElementById("bannerText").textContent=data.topmeldung90||"Keine Topmeldung eingetragen.";
+   document.getElementById("bannerText").textContent=data.ticker90||data.topmeldung90||"Keine Topmeldung eingetragen.";
     const tile=document.getElementById("news90Tile");
     if(data.news90_link){tile.href=data.news90_link;tile.dataset.shareUrl=data.news90_link;}
     document.getElementById("news90Title").textContent=data.news90_title||"Neuester Titel nicht verfügbar.";
