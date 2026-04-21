@@ -24,22 +24,41 @@ def pick_latest():
     r.raise_for_status()
     s = BeautifulSoup(r.text, "html.parser")
 
-    # 🔥 WICHTIG: Nimm den ERSTEN passenden Eintrag (der ist der aktuellste)
+    # Wichtig:
+    # Auf der Übersichtsseite heißen die neuesten Folgen oft NICHT
+    # "Servus Wetter in 90 Sekunden - xx:xx Uhr".
+    # Deshalb nehmen wir den ersten sinnvollen /aktuelles/v/ Link
+    # aus dem Archivbereich.
+    candidates = []
+
     for a in s.find_all("a", href=True):
         href = urljoin(PAGE_URL, a["href"])
         txt = " ".join(a.get_text(" ", strip=True).split())
 
         if "/aktuelles/v/" not in href:
             continue
-        if "Wetter in 90 Sekunden" not in txt:
-            continue
-        if txt.strip().lower() == "servus wetter in 90 sekunden":
+        if not txt:
             continue
 
-        short_title = clean_title(txt)
-        return short_title, txt, href
+        # Unbrauchbare Treffer rausfiltern
+        lower = txt.strip().lower()
+        if lower in {
+            "servus wetter in 90 sekunden",
+            "favoriten",
+            "teilen",
+        }:
+            continue
 
-    raise RuntimeError("Keinen Wetter-90-Eintrag gefunden.")
+        # Brauchbare Videotitel sammeln
+        candidates.append((txt, href))
+
+    if not candidates:
+        raise RuntimeError("Keinen Wetter-90-Eintrag gefunden.")
+
+    # Der erste passende Eintrag auf der Seite ist der aktuellste
+    full_title, href = candidates[0]
+    short_title = clean_title(full_title)
+    return short_title, full_title, href
 
 
 def find_image(video_url: str):
