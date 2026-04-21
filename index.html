@@ -84,12 +84,19 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     <div class="overlay"><h2>90 Sekunden News</h2><div class="sub" id="news90Title">Lade neuesten Titel …</div></div>
   </a>
 
-  <a class="tile large" href="https://www.servustv.com/aktuelles/v/aaijim4vr1uern9iu188/" target="_blank" data-share-url="https://www.servustv.com/aktuelles/v/aaijim4vr1uern9iu188/" style="background-image:url('news1920.png')">
+  <a class="tile large" id="news1920Tile"
+     href="https://www.servustv.com/aktuelles/b/servus-nachrichten/aa-1y5rjcd1h2111/"
+     target="_blank"
+     data-share-url="https://www.servustv.com/aktuelles/b/servus-nachrichten/aa-1y5rjcd1h2111/"
+     style="background-image:url('news1920.png')">
     <div class="tile-actions">
       <button class="action-btn like-btn" data-like-key="tile-news1920" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
-    <div class="overlay"><h2>Nachrichten 19:20</h2></div>
+    <div class="overlay">
+      <h2>Nachrichten 19:20</h2>
+      <div class="sub" id="news1920Title">Lade neuesten Titel …</div>
+    </div>
   </a>
 
   <a class="tile large" id="weather90Tile"
@@ -155,6 +162,21 @@ async function loadHeadlines(){
     const tile=document.getElementById("news90Tile");
     if(data.news90_link){tile.href=data.news90_link;tile.dataset.shareUrl=data.news90_link;}
     document.getElementById("news90Title").textContent=data.news90_title||"Neuester Titel nicht verfügbar.";
+
+    const news1920Tile = document.getElementById("news1920Tile");
+    if (data.news1920_link && news1920Tile) {
+      news1920Tile.href = data.news1920_link;
+      news1920Tile.dataset.shareUrl = data.news1920_link;
+    }
+
+    const news1920Title = document.getElementById("news1920Title");
+    if (news1920Title) {
+      news1920Title.textContent = data.news1920_title || "Neuester Titel nicht verfügbar.";
+    }
+
+    if (data.news1920_image && news1920Tile) {
+      news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
+    }
 
     const weatherTile = document.getElementById("weather90Tile");
     if (data.weather90_link && weatherTile) {
