@@ -12,17 +12,19 @@ JSON_PATH = ROOT / "headlines.json"
 PAGE_URL = "https://www.servustv.com/aktuelles/b/servus-wetter-in-90-sekunden/aa90vbht0krb2cmu1ahq/"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
+
 def clean_title(t: str) -> str:
     t = re.sub(r"\s*\|\s*Wetter in 90 Sekunden\s*$", "", t, flags=re.I)
     t = re.sub(r"\s+", " ", t).strip()
     return t
+
 
 def pick_latest():
     r = requests.get(PAGE_URL, headers=HEADERS, timeout=25)
     r.raise_for_status()
     s = BeautifulSoup(r.text, "html.parser")
 
-    candidates = []
+    # 🔥 WICHTIG: Nimm den ERSTEN passenden Eintrag (der ist der aktuellste)
     for a in s.find_all("a", href=True):
         href = urljoin(PAGE_URL, a["href"])
         txt = " ".join(a.get_text(" ", strip=True).split())
@@ -34,22 +36,11 @@ def pick_latest():
         if txt.strip().lower() == "servus wetter in 90 sekunden":
             continue
 
-        score = 0
-        score += 10
-        if "Wetter in 90 Sekunden" in txt:
-            score += 5
-        if len(txt) > 20:
-            score += 3
+        short_title = clean_title(txt)
+        return short_title, txt, href
 
-        candidates.append((score, txt, href))
+    raise RuntimeError("Keinen Wetter-90-Eintrag gefunden.")
 
-    if not candidates:
-        raise RuntimeError("Keinen Wetter-90-Eintrag gefunden.")
-
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    _, full_title, href = candidates[0]
-    short_title = clean_title(full_title)
-    return short_title, full_title, href
 
 def find_image(video_url: str):
     r = requests.get(video_url, headers=HEADERS, timeout=25)
@@ -71,6 +62,7 @@ def find_image(video_url: str):
 
     return ""
 
+
 def main():
     short_title, full_title, href = pick_latest()
     image_url = find_image(href)
@@ -90,6 +82,7 @@ def main():
     )
 
     print("weather90 updated:", full_title, href, image_url)
+
 
 if __name__ == "__main__":
     main()
