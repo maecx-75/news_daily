@@ -92,22 +92,22 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     <div class="overlay"><h2>Nachrichten 19:20</h2></div>
   </a>
 
-<a class="tile large" id="weather90Tile"
-   href="#"
-   target="_blank"
-   data-share-url="#"
-   style="background-image:url('weather90.png')">
+  <a class="tile large" id="weather90Tile"
+     href="https://www.servustv.com/aktuelles/b/servus-wetter-in-90-sekunden/aa90vbht0krb2cmu1ahq/"
+     target="_blank"
+     data-share-url="https://www.servustv.com/aktuelles/b/servus-wetter-in-90-sekunden/aa90vbht0krb2cmu1ahq/"
+     style="background-image:url('wetter.png')">
 
-  <div class="tile-actions">
-    <button class="action-btn like-btn" data-like-key="tile-wetter90" onclick="toggleLike(event, this)">♡ Like</button>
-    <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
-  </div>
+    <div class="tile-actions">
+      <button class="action-btn like-btn" data-like-key="tile-wetter90" onclick="toggleLike(event, this)">♡ Like</button>
+      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
+    </div>
 
-  <div class="overlay">
-    <h2>90 Sekunden Wetter</h2>
-    <div class="sub" id="weather90Title">Lade neuesten Titel …</div>
-  </div>
-</a>
+    <div class="overlay">
+      <h2>90 Sekunden Wetter</h2>
+      <div class="sub" id="weather90Title">Lade neuesten Titel …</div>
+    </div>
+  </a>
 
   <a class="tile small" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank" data-share-url="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80')">
     <div class="tile-actions">
@@ -150,22 +150,27 @@ async function loadHeadlines(){
   try{
     const res=await fetch("headlines.json?ts="+Date.now());
     const data=await res.json();
-   document.getElementById("bannerText").textContent=data.ticker90||data.topmeldung90||"Keine Topmeldung eingetragen.";
+    document.getElementById("bannerText").textContent=data.ticker90||data.topmeldung90||"Keine Topmeldung eingetragen.";
+
     const tile=document.getElementById("news90Tile");
     if(data.news90_link){tile.href=data.news90_link;tile.dataset.shareUrl=data.news90_link;}
     document.getElementById("news90Title").textContent=data.news90_title||"Neuester Titel nicht verfügbar.";
+
     const weatherTile = document.getElementById("weather90Tile");
+    if (data.weather90_link && weatherTile) {
+      weatherTile.href = data.weather90_link;
+      weatherTile.dataset.shareUrl = data.weather90_link;
+    }
 
-if (data.weather90_link && weatherTile) {
-  weatherTile.href = data.weather90_link;
-  weatherTile.dataset.shareUrl = data.weather90_link;
-}
+    const weatherTitle = document.getElementById("weather90Title");
+    if (weatherTitle) {
+      weatherTitle.textContent = data.weather90_title || data.weather90_short || "Neuester Titel nicht verfügbar.";
+    }
 
-const weatherTitle = document.getElementById("weather90Title");
+    if (data.weather90_image && weatherTile) {
+      weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
+    }
 
-if (weatherTitle) {
-  weatherTitle.textContent = data.weather90_title || "Neuester Titel nicht verfügbar.";
-}
     const box=document.getElementById("googleHeadlines");
     const items=Array.isArray(data.google_headlines)?data.google_headlines.slice(0,3):[];
     box.innerHTML='<div class="title">Top Schlagzeilen</div>'+(items.length?items.map(text=>`<div class="item">• ${text}</div>`).join(""):'<div class="item">• Keine Schlagzeilen eingetragen.</div>');
