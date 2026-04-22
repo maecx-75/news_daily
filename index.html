@@ -183,6 +183,11 @@ async function loadHeadlines(){
   try{
     const res=await fetch("headlines.json?ts="+Date.now());
     const data=await res.json();
+    document.getElementById("lastUpdate").textContent =
+  "🔄 Update: " + new Date().toLocaleTimeString("de-AT", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
     document.getElementById("bannerText").textContent=data.ticker90||data.topmeldung90||"Keine Topmeldung eingetragen.";
 
     const tile=document.getElementById("news90Tile");
