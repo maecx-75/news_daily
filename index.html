@@ -226,7 +226,7 @@ async function loadHeadlines(){
   }
 }
 loadHeadlines();
-
+setInterval(loadHeadlines, 60000);
 function refreshLiveImage(){const liveTile=document.getElementById("liveTile");const ts=new Date().getTime();liveTile.style.backgroundImage="url('wetter-live.jpg?t="+ts+"')";}
 setInterval(refreshLiveImage,10000);
 
