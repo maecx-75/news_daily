@@ -169,15 +169,6 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     ▶ ServusTV Live – Hier klicken
   </a>
 </div>
-  <div class="news-teaser-box">
-  <h2>90 Sekunden News – kurz zusammengefasst</h2>
-  <p>
-    Ein Wolf läuft mitten durch ein Wohngebiet in Tirol und sorgt für Aufregung.
-    Außerdem kämpfen Einsatzkräfte weiter gegen einen Waldbrand nördlich von Graz.
-    Und: Wie viel geben die Österreicher heuer zum Muttertag aus?
-  </p>
-  <a id="news90TeaserLink" href="#" target="_blank">▶ Video ansehen</a>
-</div>
 <div class="toast" id="toast">Link kopiert</div>
 
 <script>
@@ -202,10 +193,7 @@ async function loadHeadlines(){
     const tile=document.getElementById("news90Tile");
     if(data.news90_link){tile.href=data.news90_link;tile.dataset.shareUrl=data.news90_link;}
     document.getElementById("news90Title").textContent=data.news90_title||"Neuester Titel nicht verfügbar.";
-    const teaserLink = document.getElementById("news90TeaserLink");
-if(data.news90_link && teaserLink){
-  teaserLink.href = data.news90_link;
-}
+    
 
     const news1920Tile = document.getElementById("news1920Tile");
     if (data.news1920_link && news1920Tile) {
