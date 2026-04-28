@@ -304,6 +304,14 @@ async function shareTile(event, tile){
   }catch(e){}
 }
 initLikes();
+  function openNews90Article(event){
+  event.preventDefault();
+  document.getElementById("news90Article").style.display = "block";
+}
+
+function closeNews90Article(){
+  document.getElementById("news90Article").style.display = "none";
+}
 </script>
 </body>
 </html>
