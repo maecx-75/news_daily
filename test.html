@@ -98,7 +98,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 </div>
 
 <main class="main"><div class="grid">
-  <a class="tile large" id="news90Tile" href="#" target="_blank" data-share-url="#" style="background-image:url('news90.png')">
+  <a class="tile large" onclick="openNews90Article(event)" href="#"  data-share-url="#" style="background-image:url('news90.png')">
     <div class="tile-actions">
       <button class="action-btn like-btn" data-like-key="tile-news90" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
