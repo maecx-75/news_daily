@@ -96,13 +96,15 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   width:90%;
   color:white;
 }
-  .article-modal{
+ /* ===== ARTICLE OVERLAY (FINAL CLEAN VERSION) ===== */
+
+.article-modal{
   position:fixed;
   inset:0;
   display:none;
   z-index:99999;
-  background:rgba(0,0,0,.82);
-  padding:30px;
+  background:rgba(0,0,0,.6);
+  backdrop-filter: blur(8px);
 }
 
 .article-modal.show{
@@ -111,35 +113,83 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   justify-content:center;
 }
 
+/* BOX */
 .article-box{
   max-width:900px;
+  width:90%;
   max-height:90vh;
   overflow:auto;
-  background:#111;
-  color:white;
-  padding:28px;
-  border-radius:18px;
-  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  background:#ffffff; /* ← WICHTIG: WEISS */
+  color:#111;         /* ← WICHTIG: SCHWARZ */
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 40px 100px rgba(0,0,0,.5);
+  position:relative;
+  animation:fadeIn .3s ease;
 }
 
-.article-box button{
-  float:right;
-  font-size:22px;
-  padding:8px 12px;
+/* ANIMATION */
+@keyframes fadeIn{
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* LOGO */
+.article-logo{
+  width:110px;
+  margin-bottom:20px;
+}
+
+/* CLOSE BUTTON */
+.close-btn{
+  position:absolute;
+  top:20px;
+  right:20px;
+  font-size:20px;
+  background:#eee;
   border:none;
   border-radius:50%;
+  width:40px;
+  height:40px;
   cursor:pointer;
+  font-weight:bold;
 }
 
+/* HEADLINE */
 .article-box h1{
   font-size:42px;
-  margin-bottom:18px;
+  line-height:1.2;
+  margin-bottom:20px;
 }
 
+/* TEXT */
 .article-box p{
   font-size:18px;
   line-height:1.6;
   margin-bottom:14px;
+}
+
+/* BUTTON */
+.article-box a{
+  display:inline-block;
+  margin-top:20px;
+  background:#c40012;
+  color:white;
+  padding:14px 22px;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:900;
+  transition:.2s;
+}
+
+.article-box a:hover{
+  transform:scale(1.05);
 }
 
 .article-box a{
