@@ -78,6 +78,28 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   position:fixed;
   inset:0;
   display:none;
+  background:rgba(0,0,0,0.85);
+  z-index:9999;
+}
+
+.article-modal.show{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.article-box{
+  background:#111;
+  padding:30px;
+  border-radius:15px;
+  max-width:800px;
+  width:90%;
+  color:white;
+}
+  .article-modal{
+  position:fixed;
+  inset:0;
+  display:none;
   z-index:99999;
   background:rgba(0,0,0,.82);
   padding:30px;
