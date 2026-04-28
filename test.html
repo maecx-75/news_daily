@@ -74,6 +74,62 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 .live-row a:hover{
   transform: scale(1.05);
 } 
+  .article-modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  z-index:99999;
+  background:rgba(0,0,0,.82);
+  padding:30px;
+}
+
+.article-modal.show{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.article-box{
+  max-width:900px;
+  max-height:90vh;
+  overflow:auto;
+  background:#111;
+  color:white;
+  padding:28px;
+  border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+
+.article-box button{
+  float:right;
+  font-size:22px;
+  padding:8px 12px;
+  border:none;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+.article-box h1{
+  font-size:42px;
+  margin-bottom:18px;
+}
+
+.article-box p{
+  font-size:18px;
+  line-height:1.6;
+  margin-bottom:14px;
+}
+
+.article-box a{
+  display:inline-block;
+  margin-top:12px;
+  background:#c40012;
+  color:white;
+  padding:14px 20px;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:900;
+}
 </style>
 </head>
 <body>
@@ -98,7 +154,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 </div>
 
 <main class="main"><div class="grid">
-  <a class="tile large" onclick="openNews90Article(event)" href="#"  data-share-url="#" style="background-image:url('news90.png')">
+<a class="tile large" id="news90Tile" onclick="openNews90Article(event)" href="#" data-share-url="#" style="background-image:url('news90.png')">
     <div class="tile-actions">
       <button class="action-btn like-btn" data-like-key="tile-news90" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
@@ -227,8 +283,14 @@ async function loadHeadlines(){
     document.getElementById("bannerText").textContent=data.ticker90||data.topmeldung90||"Keine Topmeldung eingetragen.";
 
     const tile=document.getElementById("news90Tile");
-    if(data.news90_link){tile.href=data.news90_link;tile.dataset.shareUrl=data.news90_link;}
-    document.getElementById("news90Title").textContent=data.news90_title||"Neuester Titel nicht verfügbar.";
+if(data.news90_link && tile){
+  tile.dataset.shareUrl=data.news90_link;
+}
+
+const news90Title=document.getElementById("news90Title");
+if(news90Title){
+  news90Title.textContent=data.news90_title||"Neuester Titel nicht verfügbar.";
+}
     
 
     const news1920Tile = document.getElementById("news1920Tile");
@@ -304,13 +366,15 @@ async function shareTile(event, tile){
   }catch(e){}
 }
 initLikes();
-  function openNews90Article(event){
+function openNews90Article(event){
   event.preventDefault();
-  document.getElementById("news90Article").style.display = "block";
+  event.stopPropagation();
+  document.getElementById("news90Article").classList.add("show");
 }
 
 function closeNews90Article(){
-  document.getElementById("news90Article").style.display = "none";
+  document.getElementById("news90Article").classList.remove("show");
+}
 }
 </script>
 </body>
