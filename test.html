@@ -391,11 +391,16 @@ initLikes();
 function openNews90Article(event){
   event.preventDefault();
   event.stopPropagation();
-  document.getElementById("news90Article").classList.add("show");
+
+  const modal = document.getElementById("news90Article");
+  modal.style.display = "flex";
+  modal.classList.add("show");
 }
 
 function closeNews90Article(){
-  document.getElementById("news90Article").classList.remove("show");
+  const modal = document.getElementById("news90Article");
+  modal.style.display = "none";
+  modal.classList.remove("show");
 }
 }
 </script>
