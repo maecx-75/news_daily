@@ -245,7 +245,7 @@ if (data.weather90_link && weatherTile) {
 if (data.weather90_image && weatherTile) {
   weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
 }
-    }
+    
 
     const box=document.getElementById("googleHeadlines");
     const items=Array.isArray(data.google_headlines)?data.google_headlines.slice(0,3):[];
