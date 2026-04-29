@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 
-PAGE_URL = "https://www.servustv.com/aktuelles/b/servus-wetter-in-90-sekunden/aa90vbht0krb2cmu1ahq/"
+PAGE_URL = "https://www.servustv.com/aktuelles/v/aasuem8t9diwa2qeztvl/"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
