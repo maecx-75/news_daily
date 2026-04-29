@@ -243,10 +243,18 @@ if(weatherSubline){
     const items=Array.isArray(data.google_headlines)?data.google_headlines.slice(0,3):[];
     box.innerHTML='<div class="title">Top Schlagzeilen</div>'+(items.length?items.map(text=>`<div class="item">• ${text}</div>`).join(""):'<div class="item">• Keine Schlagzeilen eingetragen.</div>');
   }catch(e){
-    document.getElementById("bannerText").textContent="Topmeldung konnte nicht geladen werden.";
-  }
+  console.log("Fehler beim Laden headlines:", e);
+}
+const el = document.getElementById("bannerText");
+
+if(!el.textContent || el.textContent.includes("Lade")){
+  el.textContent = "Topmeldungen werden geladen …";
+}
+
+}
 }
 loadHeadlines();
+setTimeout(loadHeadlines, 2000);
 setInterval(loadHeadlines, 60000);
 function refreshLiveImage(){const liveTile=document.getElementById("liveTile");const ts=new Date().getTime();liveTile.style.backgroundImage="url('wetter-live.jpg?t="+ts+"')";}
 setInterval(refreshLiveImage,10000);
