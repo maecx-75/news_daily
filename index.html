@@ -221,16 +221,7 @@ if(news90Subline){
     if (data.news1920_image && news1920Tile) {
       news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
     }
-
-    const weatherTile = document.getElementById("weather90Tile");
-    if (data.weather90_link && weatherTile) {
-      weatherTile.href = data.weather90_link;
-      weatherTile.dataset.shareUrl = data.weather90_link;
-    }
-
-    const weatherTitle = document.getElementById("weather90Title");
-    if (weatherTitle) {
-      const weatherHeadline = document.getElementById("weather90Headline");
+const weatherHeadline = document.getElementById("weather90Headline");
 const weatherSubline = document.getElementById("weather90Subline");
 
 if(weatherHeadline){
@@ -242,7 +233,7 @@ if(weatherHeadline){
 if(weatherSubline){
   weatherSubline.textContent = "Wetter in 90 Sekunden";
 }
-    }
+    
 
     if (data.weather90_image && weatherTile) {
       weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
