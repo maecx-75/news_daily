@@ -230,7 +230,18 @@ if(news90Subline){
 
     const weatherTitle = document.getElementById("weather90Title");
     if (weatherTitle) {
-      weatherTitle.textContent = data.weather90_title || data.weather90_short || "Neuester Titel nicht verfügbar.";
+      const weatherHeadline = document.getElementById("weather90Headline");
+const weatherSubline = document.getElementById("weather90Subline");
+
+if(weatherHeadline){
+  const title = data.weather90_title || data.weather90_short || "Neuester Titel nicht verfügbar.";
+  const parts = title.split("|");
+  weatherHeadline.textContent = parts[0].trim();
+}
+
+if(weatherSubline){
+  weatherSubline.textContent = "Wetter in 90 Sekunden";
+}
     }
 
     if (data.weather90_image && weatherTile) {
