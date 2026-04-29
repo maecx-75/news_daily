@@ -180,148 +180,201 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 <div class="toast" id="toast">Link kopiert</div>
 
 <script>
-function updateTime(){const now=new Date();document.getElementById("time").textContent=now.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});}
-setInterval(updateTime,20000);updateTime();
+function updateTime(){
+  const now = new Date();
+  document.getElementById("time").textContent =
+    now.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+}
+setInterval(updateTime,20000);
+updateTime();
 
-const coords={"Salzburg":[47.8095,13.0550],"Wien":[48.2082,16.3738],"Linz":[48.3069,14.2858],"Graz":[47.0707,15.4395],"Innsbruck":[47.2692,11.4041],"Klagenfurt":[46.6365,14.3122],"St. Pölten":[48.2047,15.6241],"Eisenstadt":[47.8457,16.5233],"Bregenz":[47.5031,9.7471]};
-async function updateSun(city){const c=coords[city];const url=`https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&daily=sunrise,sunset&timezone=Europe%2FBerlin`;try{const res=await fetch(url);const data=await res.json();const sr=new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const ss=new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});document.getElementById("sunrise").textContent="🌅 "+sr;document.getElementById("sunset").textContent="🌇 "+ss;}catch(e){document.getElementById("sunrise").textContent="🌅 --:--";document.getElementById("sunset").textContent="🌇 --:--";}}
-const citySel=document.getElementById("city");citySel.addEventListener("change",()=>updateSun(citySel.value));updateSun(citySel.value);
+const coords={
+  "Salzburg":[47.8095,13.0550],
+  "Wien":[48.2082,16.3738],
+  "Linz":[48.3069,14.2858],
+  "Graz":[47.0707,15.4395],
+  "Innsbruck":[47.2692,11.4041],
+  "Klagenfurt":[46.6365,14.3122],
+  "St. Pölten":[48.2047,15.6241],
+  "Eisenstadt":[47.8457,16.5233],
+  "Bregenz":[47.5031,9.7471]
+};
+
+async function updateSun(city){
+  const c = coords[city];
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&daily=sunrise,sunset&timezone=Europe%2FBerlin`;
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const sr = new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+    const ss = new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+
+    document.getElementById("sunrise").textContent = "🌅 " + sr;
+    document.getElementById("sunset").textContent = "🌇 " + ss;
+  }catch(e){
+    document.getElementById("sunrise").textContent = "🌅 --:--";
+    document.getElementById("sunset").textContent = "🌇 --:--";
+  }
+}
+
+const citySel = document.getElementById("city");
+citySel.addEventListener("change",()=>updateSun(citySel.value));
+updateSun(citySel.value);
 
 async function loadHeadlines(){
   try{
-    const res=await fetch("headlines.json?ts="+Date.now());
-    const data=await res.json();
+    const res = await fetch("headlines.json?ts=" + Date.now());
+    const data = await res.json();
+
     document.getElementById("lastUpdate").textContent =
-  "🔄 Update: " + new Date().toLocaleTimeString("de-AT", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-    document.getElementById("bannerText").textContent=data.ticker90||data.topmeldung90||"Keine Topmeldung eingetragen.";
+      "🔄 Update: " + new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
 
-    const tile=document.getElementById("news90Tile");
-    if(data.news90_link){tile.href=data.news90_link;tile.dataset.shareUrl=data.news90_link;}
-const news90Headline = document.getElementById("news90Headline");
-const news90Subline = document.getElementById("news90Subline");
+    document.getElementById("bannerText").textContent =
+      data.ticker90 || data.topmeldung90 || "Keine Topmeldung eingetragen.";
 
-if(news90Headline){
-  const title = data.news90_title || "Neuester Titel nicht verfügbar.";
-  const parts = title.split("|");
-  news90Headline.textContent = parts[0].trim();
-}
+    const news90Tile = document.getElementById("news90Tile");
+    if(data.news90_link && news90Tile){
+      news90Tile.href = data.news90_link;
+      news90Tile.dataset.shareUrl = data.news90_link;
+    }
 
-if(news90Subline){
-  news90Subline.textContent = "Nachrichten in 90 Sekunden";
-}
-    
+    const news90Headline = document.getElementById("news90Headline");
+    if(news90Headline){
+      const title = data.news90_title || "Neuester Titel nicht verfügbar.";
+      news90Headline.textContent = title.split("|")[0].trim();
+    }
 
-    const headlinesBox = document.getElementById("news1920Headlines");
+    const news90Subline = document.getElementById("news90Subline");
+    if(news90Subline){
+      news90Subline.textContent = "Nachrichten in 90 Sekunden";
+    }
 
-if (headlinesBox) {
-  let title = data.news1920_title || "";
-
-  let parts = title.split("|").map(t => t.trim()).filter(t => t);
-  parts = parts.slice(0, 3);
-
-  headlinesBox.innerHTML = parts.length
-   
+    if(data.news90_image && news90Tile){
+      news90Tile.style.backgroundImage = `url('${data.news90_image}?ts=${Date.now()}')`;
+    }
 
     const news1920Tile = document.getElementById("news1920Tile");
+    if(data.news1920_link && news1920Tile){
+      news1920Tile.href = data.news1920_link;
+      news1920Tile.dataset.shareUrl = data.news1920_link;
+    }
 
-if (data.news1920_link && news1920Tile) {
-  news1920Tile.href = data.news1920_link;
-  news1920Tile.dataset.shareUrl = data.news1920_link;
-}
+    const news1920Title = document.getElementById("news1920Title");
+    if(news1920Title){
+      news1920Title.textContent = data.news1920_title || "Neuester Titel nicht verfügbar.";
+    }
 
-const headlinesBox = document.getElementById("news1920Headlines");
+    const news1920Headlines = document.getElementById("news1920Headlines");
+    if(news1920Headlines){
+      let title = data.news1920_title || "";
+      let parts = title.split("|").map(t => t.trim()).filter(Boolean).slice(0,3);
 
-if (headlinesBox) {
-  let title = data.news1920_title || "";
-  let parts = title.split("|").map(t => t.trim()).filter(t => t);
-  parts = parts.slice(0, 3);
+      news1920Headlines.innerHTML = parts.length
+        ? parts.map(t => `• ${t}`).join("<br>")
+        : "• Keine Headlines verfügbar";
+    }
 
-  headlinesBox.innerHTML = parts.length
-    ? parts.map(t => `• ${t}`).join("<br>")
-    : "• Keine Headlines verfügbar";
-}
-
-if (data.news1920_image && news1920Tile) {
-  news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
-}
-const weatherHeadline = document.getElementById("weather90Headline");
-const weatherSubline = document.getElementById("weather90Subline");
-
-if(weatherHeadline){
-  const title = data.weather90_title || data.weather90_short || "Neuester Titel nicht verfügbar.";
-  const parts = title.split("|");
-  weatherHeadline.textContent = parts[0].trim();
-}
-
-if(weatherSubline){
-  weatherSubline.textContent = "Wetter in 90 Sekunden";
-}
-    
+    if(data.news1920_image && news1920Tile){
+      news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
+    }
 
     const weatherTile = document.getElementById("weather90Tile");
+    if(data.weather90_link && weatherTile){
+      weatherTile.href = data.weather90_link;
+      weatherTile.dataset.shareUrl = data.weather90_link;
+    }
 
-if (data.weather90_link && weatherTile) {
-  weatherTile.href = data.weather90_link;
-  weatherTile.dataset.shareUrl = data.weather90_link;
-}
+    const weatherHeadline = document.getElementById("weather90Headline");
+    if(weatherHeadline){
+      const title = data.weather90_title || data.weather90_short || "Neuester Titel nicht verfügbar.";
+      weatherHeadline.textContent = title.split("|")[0].trim();
+    }
 
-if (data.weather90_image && weatherTile) {
-  weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
-}
-    
+    const weatherSubline = document.getElementById("weather90Subline");
+    if(weatherSubline){
+      weatherSubline.textContent = "Wetter in 90 Sekunden";
+    }
 
-    const box=document.getElementById("googleHeadlines");
-    const items=Array.isArray(data.google_headlines)?data.google_headlines.slice(0,3):[];
-    box.innerHTML='<div class="title">Top Schlagzeilen</div>'+(items.length?items.map(text=>`<div class="item">• ${text}</div>`).join(""):'<div class="item">• Keine Schlagzeilen eingetragen.</div>');
+    if(data.weather90_image && weatherTile){
+      weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
+    }
+
+    const box = document.getElementById("googleHeadlines");
+    if(box){
+      const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
+      box.innerHTML =
+        '<div class="title">Top Schlagzeilen</div>' +
+        (items.length
+          ? items.map(text => `<div class="item">• ${text}</div>`).join("")
+          : '<div class="item">• Keine Schlagzeilen eingetragen.</div>');
+    }
+
   }catch(e){
-  console.log("Fehler beim Laden headlines:", e);
-}
-const el = document.getElementById("bannerText");
-
-if(!el.textContent || el.textContent.includes("Lade")){
-  el.textContent = "Topmeldungen werden geladen …";
+    console.log("Fehler beim Laden headlines:", e);
+  }
 }
 
-}
 loadHeadlines();
-setTimeout(loadHeadlines, 2000);
-setInterval(loadHeadlines, 60000);
-function refreshLiveImage(){const liveTile=document.getElementById("liveTile");const ts=new Date().getTime();liveTile.style.backgroundImage="url('wetter-live.jpg?t="+ts+"')";}
+setTimeout(loadHeadlines,2000);
+setInterval(loadHeadlines,60000);
+
+function refreshLiveImage(){
+  const liveTile = document.getElementById("liveTile");
+  if(liveTile){
+    liveTile.style.backgroundImage = "url('wetter-live.jpg?t=" + Date.now() + "')";
+  }
+}
 setInterval(refreshLiveImage,10000);
 
 function showToast(text){
-  const toast=document.getElementById('toast');
-  toast.textContent=text;
-  toast.classList.add('show');
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
   clearTimeout(window.toastTimer);
-  window.toastTimer=setTimeout(()=>toast.classList.remove('show'),1600);
+  window.toastTimer = setTimeout(()=>toast.classList.remove("show"),1600);
 }
+
 function toggleLike(event, btn){
-  event.preventDefault();event.stopPropagation();
-  const key=btn.dataset.likeKey;
-  const next=localStorage.getItem(key)!=='1';
-  localStorage.setItem(key,next?'1':'0');
+  event.preventDefault();
+  event.stopPropagation();
+
+  const key = btn.dataset.likeKey;
+  const next = localStorage.getItem(key) !== "1";
+
+  localStorage.setItem(key,next ? "1" : "0");
   syncLikeButton(btn);
-  showToast(next?'Geliked':'Like entfernt');
+  showToast(next ? "Geliked" : "Like entfernt");
 }
+
 function syncLikeButton(btn){
-  const liked=localStorage.getItem(btn.dataset.likeKey)==='1';
-  btn.classList.toggle('liked',liked);
-  btn.textContent=liked?'♥ Geliked':'♡ Like';
+  const liked = localStorage.getItem(btn.dataset.likeKey) === "1";
+  btn.classList.toggle("liked",liked);
+  btn.textContent = liked ? "♥ Geliked" : "♡ Like";
 }
-function initLikes(){document.querySelectorAll('.like-btn').forEach(syncLikeButton);}
+
+function initLikes(){
+  document.querySelectorAll(".like-btn").forEach(syncLikeButton);
+}
+
 async function shareTile(event, tile){
-  event.preventDefault();event.stopPropagation();
-  const url=tile.dataset.shareUrl||tile.href;
-  const title=tile.querySelector('h2')?.textContent||'Artikel';
+  event.preventDefault();
+  event.stopPropagation();
+
+  const url = tile.dataset.shareUrl || tile.href;
+  const title = tile.querySelector("h2")?.textContent || "Artikel";
+
   try{
-    if(navigator.share){await navigator.share({title,url});}
-    else{await navigator.clipboard.writeText(url);showToast('Link kopiert');}
+    if(navigator.share){
+      await navigator.share({title,url});
+    }else{
+      await navigator.clipboard.writeText(url);
+      showToast("Link kopiert");
+    }
   }catch(e){}
 }
+
 initLikes();
 </script>
 </body>
