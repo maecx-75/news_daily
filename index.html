@@ -235,8 +235,16 @@ if(weatherSubline){
 }
     
 
-    if (data.weather90_image && weatherTile) {
-      weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
+    const weatherTile = document.getElementById("weather90Tile");
+
+if (data.weather90_link && weatherTile) {
+  weatherTile.href = data.weather90_link;
+  weatherTile.dataset.shareUrl = data.weather90_link;
+}
+
+if (data.weather90_image && weatherTile) {
+  weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
+}
     }
 
     const box=document.getElementById("googleHeadlines");
@@ -251,7 +259,6 @@ if(!el.textContent || el.textContent.includes("Lade")){
   el.textContent = "Topmeldungen werden geladen …";
 }
 
-}
 }
 loadHeadlines();
 setTimeout(loadHeadlines, 2000);
