@@ -227,10 +227,17 @@ if (headlinesBox) {
     : "• Keine Headlines verfügbar";
 }
 
-    const news1920Title = document.getElementById("news1920Title");
-    if (news1920Title) {
-      news1920Title.textContent = data.news1920_title || "Neuester Titel nicht verfügbar.";
-    }
+    const headlinesBox = document.getElementById("news1920Headlines");
+
+if (headlinesBox) {
+  let title = data.news1920_title || "";
+  let parts = title.split("|").map(t => t.trim()).filter(t => t);
+  parts = parts.slice(0, 3);
+
+  headlinesBox.innerHTML = parts.length
+    ? parts.map(t => `• ${t}`).join("<br>")
+    : "• Keine Headlines verfügbar";
+}
 
     if (data.news1920_image && news1920Tile) {
       news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
