@@ -223,11 +223,16 @@ if (headlinesBox) {
   parts = parts.slice(0, 3);
 
   headlinesBox.innerHTML = parts.length
-    ? parts.map(t => `• ${t}`).join("<br>")
-    : "• Keine Headlines verfügbar";
+   
+
+    const news1920Tile = document.getElementById("news1920Tile");
+
+if (data.news1920_link && news1920Tile) {
+  news1920Tile.href = data.news1920_link;
+  news1920Tile.dataset.shareUrl = data.news1920_link;
 }
 
-    const headlinesBox = document.getElementById("news1920Headlines");
+const headlinesBox = document.getElementById("news1920Headlines");
 
 if (headlinesBox) {
   let title = data.news1920_title || "";
@@ -239,9 +244,9 @@ if (headlinesBox) {
     : "• Keine Headlines verfügbar";
 }
 
-    if (data.news1920_image && news1920Tile) {
-      news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
-    }
+if (data.news1920_image && news1920Tile) {
+  news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
+}
 const weatherHeadline = document.getElementById("weather90Headline");
 const weatherSubline = document.getElementById("weather90Subline");
 
