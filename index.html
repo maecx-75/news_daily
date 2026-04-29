@@ -117,9 +117,16 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
     <div class="overlay">
-      <h2>Nachrichten 19:20</h2>
-      <div class="sub" id="news1920Title">Lade neuesten Titel …</div>
-    </div>
+  <h2>Nachrichten 19:20</h2>
+
+  <div class="sub" id="news1920Headlines">
+    • Lade... <br>
+    • Lade... <br>
+    • Lade...
+  </div>
+
+  <div class="sub">Servus Nachrichten</div>
+</div>
   </a>
 
   <a class="tile large" id="weather90Tile"
@@ -207,11 +214,18 @@ if(news90Subline){
 }
     
 
-    const news1920Tile = document.getElementById("news1920Tile");
-    if (data.news1920_link && news1920Tile) {
-      news1920Tile.href = data.news1920_link;
-      news1920Tile.dataset.shareUrl = data.news1920_link;
-    }
+    const headlinesBox = document.getElementById("news1920Headlines");
+
+if (headlinesBox) {
+  let title = data.news1920_title || "";
+
+  let parts = title.split("|").map(t => t.trim()).filter(t => t);
+  parts = parts.slice(0, 3);
+
+  headlinesBox.innerHTML = parts.length
+    ? parts.map(t => `• ${t}`).join("<br>")
+    : "• Keine Headlines verfügbar";
+}
 
     const news1920Title = document.getElementById("news1920Title");
     if (news1920Title) {
