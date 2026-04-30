@@ -268,7 +268,10 @@ async function loadHeadlines(){
       let parts = title.split("|").map(t => t.trim()).filter(Boolean);
 
 if (parts.length >= 3) {
-  parts[0] = parts[0].replace(/^.*?19:20\s*/i, "").trim();
+  parts[0] = parts[0]
+  .replace(/^.*?(Nachrichten\s*19:20)/i, "")
+  .replace(/^.*?19:20\s*/i, "")
+  .trim();
   parts[2] = parts[2].replace(/Nachrichten.*$/i, "").trim();
 }
 
