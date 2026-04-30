@@ -268,7 +268,7 @@ async function loadHeadlines(){
       let parts = title.split("|").map(t => t.trim()).filter(Boolean).slice(0,3);
 
       news1920Headlines.innerHTML = parts.length
-        ? parts.map(t => `• ${t}`).join("<br>")
+        ? parts.join(" | ")
         : "• Keine Headlines verfügbar";
     }
 
