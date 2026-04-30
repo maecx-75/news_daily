@@ -269,8 +269,9 @@ async function loadHeadlines(){
 
 if (parts.length >= 3) {
   parts[0] = parts[0]
-  .replace(/^.*?(Nachrichten\s*19:20)/i, "")
-  .replace(/^.*?19:20\s*/i, "")
+  .replace(/^.*?Nachrichten\s*19:20\s*/i, "")
+  .replace(/^Nachrichten\s*/i, "")
+  .replace(/^Servus\s*/i, "")
   .trim();
   parts[2] = parts[2].replace(/Nachrichten.*$/i, "").trim();
 }
