@@ -268,7 +268,7 @@ async function loadHeadlines(){
 
     const news1920Headlines = document.getElementById("news1920Headlines");
     if(news1920Headlines){
-      let title = data.news1920_title || "";
+      let title = data.news1920_headlines || data.news1920_title || "";
       let parts = title.split("|").map(t => t.trim()).filter(Boolean).slice(0,3);
 
       news1920Headlines.innerHTML = parts.length
