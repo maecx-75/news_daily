@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 IMG_PATH = ROOT / "news90.png"
 
-PAGE_URL = "https://www.servustv.com/aktuelles/b/servus-nachrichten-in-90-sekunden/aaygf2urw6alqye42ijk/"
+PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 def clean_title(t):
