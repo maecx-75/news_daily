@@ -20,16 +20,27 @@ def pick_latest():
     r.raise_for_status()
     s = BeautifulSoup(r.text, "html.parser")
 
+    candidates = []
+
     for a in s.find_all("a", href=True):
         href = urljoin(PAGE_URL, a["href"])
         txt = " ".join(a.get_text(" ", strip=True).split())
 
-        if "/aktuelles/v/" in href and "Nachrichten in 90 Sekunden" in txt:
-            if txt.strip().lower() == "servus nachrichten in 90 sekunden":
-                continue
-            return txt, href
+        if "/de/page/" not in href and "/aktuelles/v/" not in href:
+            continue
 
-    raise RuntimeError("Kein Video gefunden")
+        if not txt:
+            continue
+
+        lower = txt.lower()
+
+        if "90" in lower or "sekunden" in lower or "nachrichten" in lower:
+            candidates.append((txt, href))
+
+    if not candidates:
+        raise RuntimeError("Kein 90-Sekunden-Video gefunden.")
+
+    return candidates[0]
 
 def extract_topics(video_url):
     r = requests.get(video_url, headers=HEADERS, timeout=25)
