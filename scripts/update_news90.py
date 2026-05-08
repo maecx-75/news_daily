@@ -28,7 +28,6 @@ def pick_latest():
 
         page.wait_for_timeout(3000)
 
-        # mehrmals scrollen, damit "Aktuelle Sendungen" wirklich lädt
         for _ in range(8):
             page.mouse.wheel(0, 1200)
             page.wait_for_timeout(1000)
@@ -41,11 +40,6 @@ def pick_latest():
             }))"""
         )
 
-        print("Gefundene Links:", len(links))
-
-        for l in links[:80]:
-            print("LINK:", l["href"], "TEXT:", l["text"][:120])
-
         browser.close()
 
     candidates = []
@@ -54,10 +48,7 @@ def pick_latest():
         href = item["href"]
         txt = " ".join(item["text"].split())
 
-        if not href:
-            continue
-
-        if "/de/page/" not in href:
+        if not href or "/page/" not in href:
             continue
 
         if href.split("?")[0] == PAGE_URL.split("?")[0]:
@@ -65,14 +56,19 @@ def pick_latest():
 
         lower = txt.lower()
 
-        # Suche nach echten Video-Kacheln
-        if (
-            "nachrichten" in lower
-            or "90" in lower
-            or "sekunden" in lower
-            or "min." in lower
-            or "min" in lower
-            or "cid=" in href
+        # Müll raus
+        if "der wegscheider" in lower:
+            continue
+        if "blickwechsel" in lower:
+            continue
+        if "abo" in lower:
+            continue
+        if "sek." in lower:
+            continue
+
+        # 90-Sekunden-Beiträge sind meist 1–3 Minuten und Servus Nachrichten
+        if ("servus nachrichten" in lower) and (
+            "1 min" in lower or "2 min" in lower or "3 min" in lower
         ):
             candidates.append((txt, href))
 
@@ -80,7 +76,6 @@ def pick_latest():
         raise RuntimeError("Kein 90-Sekunden-Video gefunden.")
 
     return candidates[0]
-
 
 def extract_topics(video_url):
     r = requests.get(video_url, headers=HEADERS, timeout=25)
