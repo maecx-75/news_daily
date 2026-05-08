@@ -47,8 +47,9 @@ def get_episode_ticker(url):
         full_text = soup.get_text(" ", strip=True)
 
         match = re.search(
-            r"([A-ZÄÖÜ][^|]{5,120}\s*\|\s*[^|]{5,120}\s*\|\s*[^|]{5,120})\s+(Jetzt ansehen|Serie anzeigen)",
-            full_text
+            r"Servus Nachrichten in 90 Sekunden\s*(.*?)\s*Jetzt ansehen",
+            full_text,
+            re.I
         )
 
         if match:
