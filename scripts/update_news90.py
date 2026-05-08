@@ -50,56 +50,35 @@ def pick_latest():
 
         browser.close()
 
-    candidates = []
+    checked = set()
 
     for item in links:
         href = item.get("href", "")
         txt = clean_text(item.get("text", ""))
 
-        if not href:
-            continue
-
-        if "/page/" not in href:
+        if not href or "/page/" not in href:
             continue
 
         if href.split("?")[0] == PAGE_URL.split("?")[0]:
             continue
 
-        lower = txt.lower()
-
-        # Nur echte Servus-Nachrichten-Kacheln
-        if "servus nachrichten" not in lower:
+        if href in checked:
             continue
 
-        # Andere Formate ausschließen
-        if "der wegscheider" in lower:
-            continue
-        if "blickwechsel" in lower:
-            continue
-        if "servus nachrichten 19:20" in lower:
-            continue
+        checked.add(href)
 
-        # 90-Sekunden / Kurzvideo-Kacheln: oft "15 Sek.", "1 Min.", "2 Min."
-        if not (
-            "sek." in lower
-            or "1 min" in lower
-            or "2 min" in lower
-            or "3 min" in lower
-        ):
-            continue
+        try:
+            real_title = read_title_from_video(href)
+            title_check = (real_title + " " + txt).lower()
 
-        title = clean_title(txt)
+            if "nachrichten in 90 sekunden" in title_check:
+                print("GEFUNDEN NEWS90:", real_title, href)
+                return real_title, href
 
-        if not title:
-            title = read_title_from_video(href)
+        except Exception as e:
+            print("Prüfung übersprungen:", href, e)
 
-        candidates.append((title, href))
-        print("GEFUNDEN:", title, href)
-
-    if not candidates:
-        raise RuntimeError("Kein 90-Sekunden-Video gefunden.")
-
-    return candidates[0]
+    raise RuntimeError("Kein 90-Sekunden-Video gefunden.")
 
 
 def read_title_from_video(video_url: str) -> str:
