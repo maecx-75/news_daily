@@ -13,6 +13,8 @@ JSON_PATH = ROOT / "headlines.json"
 PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 BASE_URL = "https://www.servustv.com"
 
+FALLBACK_URL = "https://www.servustv.com/de/page/AASN6K1VFDPTJSY6YQ5D?cid=f7c25019-f876-44ee-ab56-02e0d7bd231e"
+
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -44,57 +46,70 @@ def main():
         except Exception:
             old = {}
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(user_agent=HEADERS["User-Agent"])
-
-        page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
-
-        for _ in range(10):
-            page.mouse.wheel(0, 1800)
-            page.wait_for_timeout(800)
-
-        html = page.content()
-        browser.close()
-
-    urls = []
-
-    for match in re.findall(r'https://www\.servustv\.com/de/page/[A-Z0-9-]+(?:\?cid=[a-z0-9-]+)?', html, re.I):
-        clean_url = match.strip()
-        if clean_url not in urls and "AA-1Y5RJCD1H2111" not in clean_url:
-            urls.append(clean_url)
-
-    soup = BeautifulSoup(html, "html.parser")
-    for a in soup.find_all("a", href=True):
-        href = urljoin(BASE_URL, a["href"])
-        if "/de/page/" in href and "AA-1Y5RJCD1H2111" not in href:
-            if href not in urls:
-                urls.append(href)
-
-    if not urls:
-        raise RuntimeError("Keine ServusTV-Folgenlinks gefunden.")
-
     latest = None
 
-    for url in urls[:40]:
-        try:
-            title, desc, image = get_episode_meta(url)
-        except Exception:
-            continue
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(user_agent=HEADERS["User-Agent"])
 
-        combo = f"{title} {desc}".lower()
+            page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
 
-        if "servus nachrichten in 90 sekunden" in combo:
-            latest = {
-                "url": url,
-                "title": title or "Servus Nachrichten in 90 Sekunden",
-                "description": desc,
-                "image": image
-            }
-            break
+            for _ in range(10):
+                page.mouse.wheel(0, 1800)
+                page.wait_for_timeout(800)
+
+            html = page.content()
+            browser.close()
+
+        urls = []
+
+        for match in re.findall(
+            r'https://www\.servustv\.com/de/page/[A-Z0-9-]+(?:\?cid=[a-z0-9-]+)?',
+            html,
+            re.I
+        ):
+            clean_url = match.strip()
+            if clean_url not in urls and "AA-1Y5RJCD1H2111" not in clean_url:
+                urls.append(clean_url)
+
+        soup = BeautifulSoup(html, "html.parser")
+
+        for a in soup.find_all("a", href=True):
+            href = urljoin(BASE_URL, a["href"])
+            if "/de/page/" in href and "AA-1Y5RJCD1H2111" not in href:
+                if href not in urls:
+                    urls.append(href)
+
+        for url in urls[:60]:
+            try:
+                title, desc, image = get_episode_meta(url)
+            except Exception:
+                continue
+
+            combo = f"{title} {desc}".lower()
+
+            if "servus nachrichten in 90 sekunden" in combo:
+                latest = {
+                    "url": url,
+                    "title": title or "Servus Nachrichten in 90 Sekunden",
+                    "description": desc,
+                    "image": image or "news90.png"
+                }
+                break
+
+    except Exception as e:
+        print("Scraper-Fehler:", e)
 
     if not latest:
-        raise RuntimeError("Keine aktuelle 90-Sekunden-Folge erkannt.")
+        title, desc, image = get_episode_meta(FALLBACK_URL)
+
+        latest = {
+            "url": FALLBACK_URL,
+            "title": title or "Servus Nachrichten in 90 Sekunden",
+            "description": desc or "Aktuelle Folge",
+            "image": image or "news90.png"
+        }
 
     ticker_source = latest["description"] or latest["title"]
     topics = [clean(x) for x in re.split(r"\s*\|\s*", ticker_source) if clean(x)]
@@ -125,7 +140,10 @@ def main():
     if "google_headlines" in old:
         data["google_headlines"] = old["google_headlines"]
 
-    JSON_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    JSON_PATH.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
 
     print("headlines.json aktualisiert:")
     print(data["news90_title"])
