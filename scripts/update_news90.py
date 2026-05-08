@@ -3,13 +3,13 @@ import re
 from pathlib import Path
 from urllib.parse import urljoin
 
+import requests
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 
-SERIES_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
+SERIES_URL = "https://www.servustv.com/de/page/AAYGF2URW6ALQYE42IJK"
 BASE_URL = "https://www.servustv.com"
 
 HEADERS = {
@@ -21,41 +21,13 @@ def clean(text):
     return " ".join((text or "").split()).strip()
 
 
-def find_image_near_link(a):
-    parent = a
-    for _ in range(5):
-        if not parent:
-            break
-
-        img = parent.find("img")
-        if img:
-            src = (
-                img.get("src")
-                or img.get("data-src")
-                or img.get("data-lazy-src")
-                or img.get("srcset", "").split(" ")[0]
-            )
-            if src:
-                return urljoin(BASE_URL, src)
-
-        style = parent.get("style", "")
-        match = re.search(r"url\(['\"]?(.*?)['\"]?\)", style)
-        if match:
-            return urljoin(BASE_URL, match.group(1))
-
-        parent = parent.parent
-
-    return ""
+def get_meta(soup, name):
+    tag = soup.find("meta", attrs={"property": name}) or soup.find("meta", attrs={"name": name})
+    return tag.get("content", "").strip() if tag else ""
 
 
 def pick_latest():
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(user_agent=HEADERS["User-Agent"])
-        page.goto(SERIES_URL, wait_until="networkidle", timeout=60000)
-        html = page.content()
-        browser.close()
-
+    html = requests.get(SERIES_URL, headers=HEADERS, timeout=20).text
     soup = BeautifulSoup(html, "html.parser")
 
     candidates = []
@@ -74,31 +46,56 @@ def pick_latest():
         if "/de/page/" not in href:
             continue
 
-        image = find_image_near_link(a)
+        candidates.append(href)
 
-        if text:
-            candidates.append({
-                "title": text,
-                "url": href,
-                "href": href,
-                "image": image
-            })
+    # Fallback: falls ServusTV die Links nicht sichtbar rendert
+    if not candidates:
+        search_html = requests.get(
+            "https://www.servustv.com/de/suche/?q=Servus%20Nachrichten%20in%2090%20Sekunden",
+            headers=HEADERS,
+            timeout=20
+        ).text
+        search_soup = BeautifulSoup(search_html, "html.parser")
+
+        for a in search_soup.find_all("a", href=True):
+            href = urljoin(BASE_URL, a["href"])
+            combo = f"{a.get_text(' ', strip=True)} {href}".lower()
+
+            if "servus-nachrichten-in-90-sekunden" in combo and "/de/page/" in href:
+                candidates.append(href)
 
     if not candidates:
         raise RuntimeError("Keine aktuelle 90-Sekunden-Folge gefunden.")
 
-    latest = candidates[0]
+    latest_url = candidates[0]
 
-    title = latest["title"]
+    episode_html = requests.get(latest_url, headers=HEADERS, timeout=20).text
+    episode_soup = BeautifulSoup(episode_html, "html.parser")
 
-    parts = [p.strip() for p in title.split("|") if p.strip()]
-    topics = parts[:3] if len(parts) >= 2 else [title]
+    page_title = clean(get_meta(episode_soup, "og:title"))
+    page_desc = clean(get_meta(episode_soup, "og:description"))
+    image = get_meta(episode_soup, "og:image")
 
-    latest["topics"] = topics
-    latest["ticker"] = " | ".join(topics)
-    latest["series_url"] = SERIES_URL
+    if not page_title:
+        h1 = episode_soup.find(["h1", "h2", "h3"])
+        page_title = clean(h1.get_text(" ", strip=True)) if h1 else "Servus Nachrichten in 90 Sekunden"
 
-    return latest
+    ticker_source = page_desc or page_title
+    topics = [clean(x) for x in re.split(r"\s*\|\s*", ticker_source) if clean(x)]
+    topics = topics[:3] if topics else [page_title]
+
+    return {
+        "title": page_title,
+        "short_title": page_title,
+        "full_title": page_title,
+        "url": latest_url,
+        "href": latest_url,
+        "image": image,
+        "thumbnail": image,
+        "topics": topics,
+        "ticker": " | ".join(topics),
+        "series_url": SERIES_URL
+    }
 
 
 def main():
