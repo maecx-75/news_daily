@@ -56,7 +56,6 @@ def pick_latest():
 
         lower = txt.lower()
 
-        # Müll raus
         if "der wegscheider" in lower:
             continue
         if "blickwechsel" in lower:
@@ -66,17 +65,16 @@ def pick_latest():
         if "sek." in lower:
             continue
 
-        # 90-Sekunden-Beiträge sind meist 1–3 Minuten und Servus Nachrichten
         if (
-    "servus nachrichten" in lower
-    and (
-        "1 min" in lower
-        or "2 min" in lower
-        or "3 min" in lower
-    )
-):
-    candidates.append((txt, href))
-    print("GEFUNDEN:", txt, href)
+            "servus nachrichten" in lower
+            and (
+                "1 min" in lower
+                or "2 min" in lower
+                or "3 min" in lower
+            )
+        ):
+            candidates.append((txt, href))
+            print("GEFUNDEN:", txt, href)
 
     if not candidates:
         raise RuntimeError("Kein 90-Sekunden-Video gefunden.")
