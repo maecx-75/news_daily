@@ -1,37 +1,84 @@
 import json
 import re
 from pathlib import Path
-from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 
-PAGE_URL = "https://www.servustv.com/aktuelles/b/servus-nachrichten/aa-1y5rjcd1h2111/"
+PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
+def clean_text(t: str) -> str:
+    return re.sub(r"\s+", " ", t or "").strip()
+
+
+def clean_title(t: str) -> str:
+    t = clean_text(t)
+    t = re.sub(r"^\s*(NEUE FOLGE\s*)?", "", t, flags=re.I)
+    t = re.sub(r"^\s*\d+\s*Min\.\s*", "", t, flags=re.I)
+    return clean_text(t)
+
+
 def pick_latest():
-    r = requests.get(PAGE_URL, headers=HEADERS, timeout=25)
-    r.raise_for_status()
-    s = BeautifulSoup(r.text, "html.parser")
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent=HEADERS["User-Agent"])
+        page.goto(PAGE_URL, wait_until="domcontentloaded", timeout=60000)
 
-    for a in s.find_all("a", href=True):
-        href = urljoin(PAGE_URL, a["href"])
-        txt = " ".join(a.get_text(" ", strip=True).split())
+        page.wait_for_timeout(3000)
 
-        if "/aktuelles/v/" not in href:
+        for _ in range(8):
+            page.mouse.wheel(0, 1200)
+            page.wait_for_timeout(800)
+
+        links = page.eval_on_selector_all(
+            "a",
+            """els => els.map(a => ({
+                href: a.href,
+                text: (a.innerText || a.textContent || "").trim()
+            }))"""
+        )
+
+        browser.close()
+
+    candidates = []
+
+    for item in links:
+        href = item.get("href", "")
+        txt = clean_text(item.get("text", ""))
+
+        if not href or "/page/" not in href:
             continue
-        if not txt:
-            continue
-        if "Nachrichten 19:20" not in txt:
+
+        if href.split("?")[0] == PAGE_URL.split("?")[0]:
             continue
 
-        return txt, href
+        lower = txt.lower()
 
-    raise RuntimeError("Keine aktuelle 19:20-Folge gefunden.")
+        if "servus nachrichten" not in lower:
+            continue
+
+        if "90 sekunden" in lower:
+            continue
+
+        if "der wegscheider" in lower:
+            continue
+
+        # 19:20 ist meistens länger, z. B. 14 Min.
+        if "19:20" in lower or "14 min" in lower or "15 min" in lower or "16 min" in lower:
+            title = clean_title(txt)
+            candidates.append((title, href))
+            print("GEFUNDEN 19:20:", title, href)
+
+    if not candidates:
+        raise RuntimeError("Keine aktuelle 19:20-Folge gefunden.")
+
+    return candidates[0]
 
 
 def find_three_headlines(video_url: str):
@@ -39,15 +86,21 @@ def find_three_headlines(video_url: str):
     r.raise_for_status()
     s = BeautifulSoup(r.text, "html.parser")
 
+    meta = s.find("meta", attrs={"name": "description"})
+    if meta and meta.get("content") and "|" in meta["content"]:
+        parts = [clean_text(p) for p in meta["content"].split("|")]
+        parts = [p for p in parts if len(p) > 3]
+        return " | ".join(parts[:3])
+
     text = " ".join(s.get_text(" ", strip=True).split())
 
     matches = re.findall(
-        r"([A-ZÄÖÜa-zäöüß0-9][^|]{5,80}\s\|\s[^|]{5,80}\s\|\s[^|]{5,80})",
+        r"([A-ZÄÖÜa-zäöüß0-9][^|]{3,80}\s\|\s[^|]{3,80}\s\|\s[^|]{3,80})",
         text
     )
 
     if matches:
-        return matches[-1].strip()
+        return clean_text(matches[-1])
 
     return ""
 
