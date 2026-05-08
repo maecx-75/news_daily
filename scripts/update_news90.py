@@ -5,16 +5,15 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 
-SEARCH_URL = "https://www.servustv.com/de/suche/?q=Servus%20Nachrichten%20in%2090%20Sekunden"
+PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 BASE_URL = "https://www.servustv.com"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
+HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
 def clean(text):
@@ -26,6 +25,17 @@ def get_meta(soup, key):
     return clean(tag.get("content", "")) if tag else ""
 
 
+def get_episode_meta(url):
+    html = requests.get(url, headers=HEADERS, timeout=20).text
+    soup = BeautifulSoup(html, "html.parser")
+
+    title = get_meta(soup, "og:title")
+    desc = get_meta(soup, "og:description")
+    image = get_meta(soup, "og:image")
+
+    return title, desc, image
+
+
 def main():
     old = {}
     if JSON_PATH.exists():
@@ -34,77 +44,93 @@ def main():
         except Exception:
             old = {}
 
-    html = requests.get(SEARCH_URL, headers=HEADERS, timeout=20).text
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent=HEADERS["User-Agent"])
+
+        page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+
+        for _ in range(10):
+            page.mouse.wheel(0, 1800)
+            page.wait_for_timeout(800)
+
+        html = page.content()
+        browser.close()
+
+    urls = []
+
+    for match in re.findall(r'https://www\.servustv\.com/de/page/[A-Z0-9-]+(?:\?cid=[a-z0-9-]+)?', html, re.I):
+        clean_url = match.strip()
+        if clean_url not in urls and "AA-1Y5RJCD1H2111" not in clean_url:
+            urls.append(clean_url)
+
     soup = BeautifulSoup(html, "html.parser")
-
-    links = []
-
     for a in soup.find_all("a", href=True):
-        href = urljoin(BASE_URL, a["href"]).split("?")[0].rstrip("/")
-        text = clean(a.get_text(" ", strip=True))
-        combo = f"{href} {text}".lower()
+        href = urljoin(BASE_URL, a["href"])
+        if "/de/page/" in href and "AA-1Y5RJCD1H2111" not in href:
+            if href not in urls:
+                urls.append(href)
 
-        if "/de/page/" in href and "servus-nachrichten-in-90-sekunden" in combo:
-            if href not in links:
-                links.append(href)
+    if not urls:
+        raise RuntimeError("Keine ServusTV-Folgenlinks gefunden.")
 
-    if not links:
-        # Notfall: alte Daten behalten, statt Action rot zu machen
-        if old:
-            print("Keine neue Folge gefunden, behalte alte headlines.json")
-            return
-        raise RuntimeError("Keine 90-Sekunden-Folgen gefunden.")
+    latest = None
 
-    latest_url = links[0]
+    for url in urls[:40]:
+        try:
+            title, desc, image = get_episode_meta(url)
+        except Exception:
+            continue
 
-    episode_html = requests.get(latest_url, headers=HEADERS, timeout=20).text
-    episode_soup = BeautifulSoup(episode_html, "html.parser")
+        combo = f"{title} {desc}".lower()
 
-    title = get_meta(episode_soup, "og:title")
-    description = get_meta(episode_soup, "og:description")
-    image = get_meta(episode_soup, "og:image")
+        if "servus nachrichten in 90 sekunden" in combo:
+            latest = {
+                "url": url,
+                "title": title or "Servus Nachrichten in 90 Sekunden",
+                "description": desc,
+                "image": image
+            }
+            break
 
-    if not title:
-        h1 = episode_soup.find("h1")
-        title = clean(h1.get_text(" ", strip=True)) if h1 else "Servus Nachrichten in 90 Sekunden"
+    if not latest:
+        raise RuntimeError("Keine aktuelle 90-Sekunden-Folge erkannt.")
 
-    ticker_source = description or title
+    ticker_source = latest["description"] or latest["title"]
     topics = [clean(x) for x in re.split(r"\s*\|\s*", ticker_source) if clean(x)]
-    topics = topics[:3] if topics else [title]
+    topics = topics[:3] if topics else [latest["title"]]
     ticker = " | ".join(topics)
 
     data = {
-        "title": title,
-        "short_title": title,
-        "full_title": title,
-        "url": latest_url,
-        "href": latest_url,
-        "image": image,
-        "thumbnail": image,
+        "title": latest["title"],
+        "short_title": latest["title"],
+        "full_title": latest["title"],
+        "url": latest["url"],
+        "href": latest["url"],
+        "image": latest["image"],
+        "thumbnail": latest["image"],
 
-        "news90_title": title,
-        "news90_link": latest_url,
-        "news90_image": image,
-        "news90_thumbnail": image,
+        "news90_title": latest["title"],
+        "news90_link": latest["url"],
+        "news90_image": latest["image"],
+        "news90_thumbnail": latest["image"],
 
         "topics": topics,
         "ticker": ticker,
         "ticker90": ticker,
         "topmeldung90": ticker,
-        "description": description
+        "description": latest["description"]
     }
 
     if "google_headlines" in old:
         data["google_headlines"] = old["google_headlines"]
 
-    JSON_PATH.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    JSON_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print("headlines.json aktualisiert:")
     print(data["news90_title"])
     print(data["news90_link"])
+    print(data["news90_image"])
     print(data["ticker"])
 
 
