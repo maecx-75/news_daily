@@ -15,9 +15,17 @@ PAGE_URL = "https://www.servustv.com/de/page/AAYGF2URW6ALQYE42IJK"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
-def clean_title(t):
+def clean_text(t: str) -> str:
+    return re.sub(r"\s+", " ", t or "").strip()
+
+
+def clean_title(t: str) -> str:
+    t = clean_text(t)
     t = re.sub(r"\s*\|\s*Nachrichten in 90 Sekunden\s*$", "", t, flags=re.I)
-    return re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"^\s*(NEUE FOLGE\s*)?", "", t, flags=re.I)
+    t = re.sub(r"^\s*\d+\s*(Sek\.|Min\.)\s*", "", t, flags=re.I)
+    t = re.sub(r"\s*Servus Nachrichten\s*$", "", t, flags=re.I)
+    return clean_text(t)
 
 
 def pick_latest():
@@ -28,9 +36,9 @@ def pick_latest():
 
         page.wait_for_timeout(3000)
 
-        for _ in range(8):
+        for _ in range(10):
             page.mouse.wheel(0, 1200)
-            page.wait_for_timeout(1000)
+            page.wait_for_timeout(800)
 
         links = page.eval_on_selector_all(
             "a",
@@ -45,10 +53,13 @@ def pick_latest():
     candidates = []
 
     for item in links:
-        href = item["href"]
-        txt = " ".join(item["text"].split())
+        href = item.get("href", "")
+        txt = clean_text(item.get("text", ""))
 
-        if not href or "/page/" not in href:
+        if not href:
+            continue
+
+        if "/page/" not in href:
             continue
 
         if href.split("?")[0] == PAGE_URL.split("?")[0]:
@@ -56,62 +67,95 @@ def pick_latest():
 
         lower = txt.lower()
 
+        # Nur echte Servus-Nachrichten-Kacheln
+        if "servus nachrichten" not in lower:
+            continue
+
+        # Andere Formate ausschließen
         if "der wegscheider" in lower:
             continue
         if "blickwechsel" in lower:
             continue
-        if "abo" in lower:
-            continue
-        if "sek." in lower:
+        if "servus nachrichten 19:20" in lower:
             continue
 
-        if (
-            "servus nachrichten" in lower
-            and (
-                "1 min" in lower
-                or "2 min" in lower
-                or "3 min" in lower
-            )
+        # 90-Sekunden / Kurzvideo-Kacheln: oft "15 Sek.", "1 Min.", "2 Min."
+        if not (
+            "sek." in lower
+            or "1 min" in lower
+            or "2 min" in lower
+            or "3 min" in lower
         ):
-            candidates.append((txt, href))
-            print("GEFUNDEN:", txt, href)
+            continue
+
+        title = clean_title(txt)
+
+        if not title:
+            title = read_title_from_video(href)
+
+        candidates.append((title, href))
+        print("GEFUNDEN:", title, href)
 
     if not candidates:
         raise RuntimeError("Kein 90-Sekunden-Video gefunden.")
 
     return candidates[0]
 
-def extract_topics(video_url):
+
+def read_title_from_video(video_url: str) -> str:
+    r = requests.get(video_url, headers=HEADERS, timeout=25)
+    r.raise_for_status()
+    s = BeautifulSoup(r.text, "html.parser")
+
+    og = s.find("meta", attrs={"property": "og:title"})
+    if og and og.get("content"):
+        return clean_title(og["content"])
+
+    h1 = s.find("h1")
+    if h1:
+        return clean_title(h1.get_text(" ", strip=True))
+
+    return "Nachrichten in 90 Sekunden"
+
+
+def extract_topics(video_url: str) -> str:
     r = requests.get(video_url, headers=HEADERS, timeout=25)
     r.raise_for_status()
     s = BeautifulSoup(r.text, "html.parser")
 
     meta = s.find("meta", attrs={"name": "description"})
     if meta and meta.get("content") and "|" in meta["content"]:
-        parts = [p.strip() for p in meta["content"].split("|")]
+        parts = [clean_text(p) for p in meta["content"].split("|")]
+        parts = [p for p in parts if len(p) > 5]
         return " | ".join(parts[:3])
 
     text = s.get_text("\n", strip=True)
     best_line = ""
 
     for line in text.split("\n"):
+        line = clean_text(line)
+
         if "|" not in line:
             continue
-        if "ServusTV" in line or "Mehr anzeigen" in line:
+        if "ServusTV" in line:
             continue
-        if len(line) < 30:
+        if "Mehr anzeigen" in line:
             continue
+        if len(line) < 20:
+            continue
+
         if line.count("|") >= 2 and len(line) > len(best_line):
             best_line = line
 
     if best_line:
-        parts = [p.strip() for p in best_line.split("|") if len(p.strip()) > 10]
+        parts = [clean_text(p) for p in best_line.split("|")]
+        parts = [p for p in parts if len(p) > 5]
         return " | ".join(parts[:3])
 
     return ""
 
 
-def find_image(video_url):
+def find_image(video_url: str):
     r = requests.get(video_url, headers=HEADERS, timeout=25)
     r.raise_for_status()
     s = BeautifulSoup(r.text, "html.parser")
@@ -137,7 +181,7 @@ def main():
         data = json.loads(JSON_PATH.read_text(encoding="utf-8"))
 
     data["topmeldung90"] = short
-    data["news90_title"] = title
+    data["news90_title"] = short
     data["news90_link"] = href
 
     if topics:
@@ -157,7 +201,7 @@ def main():
         encoding="utf-8"
     )
 
-    print("news90 updated:", title, href, topics)
+    print("news90 updated:", short, href, topics)
 
 
 if __name__ == "__main__":
