@@ -1,19 +1,19 @@
 {
-  "topmeldung90": "Servus Nachrichten in 90 Sekunden bei ServusTV On",
-  "news90_link": "https://www.servustv.com/de/page/AAYGF2URW6ALQYE42IJK#content",
-  "news90_title": "Servus Nachrichten in 90 Sekunden bei ServusTV On",
-  "google_headlines": [
-    "Trockenperiode zehrt an Niederösterreichs Grundwasserreserven - DiePresse.com",
-    "„Merke jeden Tag Fortschritte“: Doskozil nach Kehlkopf-Entfernung aus Spital entlassen - DiePresse.com",
-    "Europatag: Regierungsspitze verstärkt Bekenntnis zur EU - ORF"
+  "title": "Servus Nachrichten: Aktuelle Meldungen und Videos",
+  "short_title": "Servus Nachrichten: Aktuelle Meldungen und Videos",
+  "full_title": "Servus Nachrichten: Aktuelle Meldungen und Videos",
+  "url": "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111",
+  "href": "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111",
+  "image": "https://images.redbull.tv/image/upload/f_webp,c_fill,w_1920,h_1080,q_90/v1777977790332/playnet/82088f5e-b9fd-42f6-9e33-8595c3a719c5",
+  "thumbnail": "https://images.redbull.tv/image/upload/f_webp,c_fill,w_1920,h_1080,q_90/v1777977790332/playnet/82088f5e-b9fd-42f6-9e33-8595c3a719c5",
+  "topics": [
+    "Servus Nachrichten: Aktuelle Meldungen und Videos"
   ],
-  "ticker90": "USA: Flugzeug streift Lkw | Neue Details zu Hipp-Erpresser | Wöginger tritt zurück",
-  "weather90_title": "Österreich-Wetter: Gewitter, Hagel, schwül-warme Luft",
-  "weather90_short": "Österreich-Wetter: Gewitter, Hagel, schwül-warme Luft",
-  "weather90_link": "https://www.servustv.com/aktuelles/v/aauufmctwphcmc94ztc6/",
-  "weather90_image": "https://img.liiift.io/v1/STV/FOPIV7D2FVA3UGPV1V88.tif/a:p/im:i:g_faces,c_fill,w_1920,h_1080/im:i:q_90,f_webp/00_Blitz_Gewitter.tif",
-  "news1920_title": "04. Mai - Servus Nachrichten 19:20",
-  "news1920_link": "https://www.servustv.com/aktuelles/v/aaq1kn1g4lphl5cishhq/",
-  "news1920_image": "https://img.liiift.io/v1/STV/FOWV14A8RW6ZLQMJBX2Q.jpg/a:p/im:i:g_faces,c_fill,w_1920,h_1080/im:i:q_90,f_webp/36608040027-thumbnail.jpg",
-  "news1920_headlines": "chrichten Favoriten Teilen 04. Mai - Servus Nachrichten 19:20 Wöginger verurteilt | Hipp-Erpresser: Neue Infos | Virus auf Kreuzfahrt Nachrichten aus Österreich und der Welt. Unabhängig und neu"
+  "ticker": "Servus Nachrichten: Aktuelle Meldungen und Videos",
+  "description": "Die Nachrichten-Sendung mit den wichtigsten Themen des Tages - unabhängig und neutral.",
+  "google_headlines": [
+    "Trockenheit dauert an, während sich in den Ozeanen Extremwetter zusammenbraut - Der Standard",
+    "„Merke jeden Tag Fortschritte“: Doskozil nach Kehlkopf-Entfernung aus Spital entlassen - DiePresse.com",
+    "7 Tage Weltgeschehen - Poker gegen Schach: Der Weg in den dümmsten Krieg - Kronen Zeitung"
+  ]
 }
