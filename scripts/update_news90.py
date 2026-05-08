@@ -24,27 +24,56 @@ def pick_latest():
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(user_agent=HEADERS["User-Agent"])
-        page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+        page.goto(PAGE_URL, wait_until="domcontentloaded", timeout=60000)
+
         page.wait_for_timeout(3000)
 
-        html = page.content()
+        # mehrmals scrollen, damit "Aktuelle Sendungen" wirklich lädt
+        for _ in range(8):
+            page.mouse.wheel(0, 1200)
+            page.wait_for_timeout(1000)
+
+        links = page.eval_on_selector_all(
+            "a",
+            """els => els.map(a => ({
+                href: a.href,
+                text: (a.innerText || a.textContent || "").trim()
+            }))"""
+        )
+
+        print("Gefundene Links:", len(links))
+
+        for l in links[:80]:
+            print("LINK:", l["href"], "TEXT:", l["text"][:120])
+
         browser.close()
 
-    s = BeautifulSoup(html, "html.parser")
     candidates = []
 
-    for a in s.find_all("a", href=True):
-        href = urljoin(PAGE_URL, a["href"])
-        txt = " ".join(a.get_text(" ", strip=True).split())
+    for item in links:
+        href = item["href"]
+        txt = " ".join(item["text"].split())
 
-        if "/de/page/" not in href and "/aktuelles/v/" not in href:
+        if not href:
             continue
-        if not txt:
+
+        if "/de/page/" not in href:
+            continue
+
+        if href.split("?")[0] == PAGE_URL.split("?")[0]:
             continue
 
         lower = txt.lower()
 
-        if "90" in lower or "sekunden" in lower or "nachrichten" in lower:
+        # Suche nach echten Video-Kacheln
+        if (
+            "nachrichten" in lower
+            or "90" in lower
+            or "sekunden" in lower
+            or "min." in lower
+            or "min" in lower
+            or "cid=" in href
+        ):
             candidates.append((txt, href))
 
     if not candidates:
