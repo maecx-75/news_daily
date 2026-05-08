@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Das Wichtigste des Tages</title>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--red:#c40012;--dark-red:#8b000c;--black-red:#650008;--bg:#000;--shadow:0 14px 32px rgba(0,0,0,.35);--border:rgba(255,255,255,.08)}
 body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
+
 .topbar{background:linear-gradient(90deg,var(--red) 0%,var(--dark-red) 65%,var(--black-red) 100%);min-height:120px;display:grid;grid-template-columns:180px 1fr 420px;align-items:center;padding:16px 24px;border-bottom:16px solid #540007;gap:12px}
 .logo img{width:92px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.28)}
 .headline{text-align:center}
@@ -31,9 +33,11 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 .tile.small{grid-column:span 4;min-height:220px}
 .overlay{position:absolute;bottom:0;width:100%;padding:15px;background:linear-gradient(transparent,rgba(0,0,0,.88))}
 .sub{font-size:14px;opacity:.95;margin-top:6px}
+
 .headlines{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.72);padding:10px;border-radius:8px;font-size:13px;max-width:60%;min-width:240px}
 .headlines .title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
 .headlines div.item{margin-bottom:6px;line-height:1.3}
+
 .live-badge{position:absolute;top:12px;left:12px;z-index:2;display:inline-flex;align-items:center;gap:8px;background:rgba(196,0,18,.95);color:#fff;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;border-radius:999px;box-shadow:0 8px 18px rgba(0,0,0,.28)}
 .live-dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
 
@@ -41,50 +45,50 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 .action-btn{border:none;background:rgba(0,0,0,.58);color:#fff;backdrop-filter:blur(6px);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.25)}
 .action-btn:hover{background:rgba(0,0,0,.76)}
 .action-btn.liked{background:rgba(196,0,18,.95)}
+
 .toast{position:fixed;right:18px;bottom:18px;background:rgba(0,0,0,.88);color:#fff;padding:12px 14px;border-radius:12px;font-weight:700;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 32px rgba(0,0,0,.35);opacity:0;transform:translateY(10px);pointer-events:none;transition:all .25s ease;z-index:9999}
 .toast.show{opacity:1;transform:translateY(0)}
 
+.live-row{margin:30px auto;text-align:center}
+.live-row a{display:inline-block;background:linear-gradient(90deg,#c40012,#8b000c);color:white;font-size:22px;font-weight:800;padding:16px 30px;border-radius:12px;text-decoration:none;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:transform .2s ease}
+.live-row a:hover{transform:scale(1.05)}
+
 @media(max-width:1100px){
-.topbar{grid-template-columns:1fr;text-align:center}
-.meta{justify-content:center}
-.tile.large,.tile.small{grid-column:span 12}
-.headlines{max-width:calc(100% - 20px);min-width:0}
-.banner{grid-template-columns:1fr}
-.banner-label{justify-content:center;padding:10px 14px}
-.banner-viewport{min-height:48px}
+  .topbar{grid-template-columns:1fr;text-align:center}
+  .meta{justify-content:center}
+  .tile.large,.tile.small{grid-column:span 12}
+  .headlines{max-width:calc(100% - 20px);min-width:0}
+  .banner{grid-template-columns:1fr}
+  .banner-label{justify-content:center;padding:10px 14px}
+  .banner-viewport{min-height:48px}
 }
-.live-row{
-  margin: 30px auto;
-  text-align: center;
-}
-
-.live-row a{
-  display: inline-block;
-  background: linear-gradient(90deg,#c40012,#8b000c);
-  color: white;
-  font-size: 22px;
-  font-weight: 800;
-  padding: 16px 30px;
-  border-radius: 12px;
-  text-decoration: none;
-  box-shadow: 0 10px 25px rgba(0,0,0,.4);
-  transition: transform .2s ease;
-}
-
-.live-row a:hover{
-  transform: scale(1.05);
-} 
 </style>
 </head>
+
 <body>
+
 <header class="topbar">
-  <div class="logo"><img src="servustv-on-logo.png" alt="ServusTV On Logo"></div>
-  <div class="headline"><h1>Das Wichtigste des Tages</h1><p>Die Top Nachrichten und das Wetter für Österreich</p></div>
+  <div class="logo">
+    <img src="servustv-on-logo.png" alt="ServusTV On Logo">
+  </div>
+
+  <div class="headline">
+    <h1>Das Wichtigste des Tages</h1>
+    <p>Die Top Nachrichten und das Wetter für Österreich</p>
+  </div>
+
   <div class="meta">
     <div class="meta-box" id="time">--:--</div>
     <select id="city">
-      <option>Salzburg</option><option>Wien</option><option>Linz</option><option>Graz</option>
-      <option>Innsbruck</option><option>Klagenfurt</option><option>St. Pölten</option><option>Eisenstadt</option><option>Bregenz</option>
+      <option>Salzburg</option>
+      <option>Wien</option>
+      <option>Linz</option>
+      <option>Graz</option>
+      <option>Innsbruck</option>
+      <option>Klagenfurt</option>
+      <option>St. Pölten</option>
+      <option>Eisenstadt</option>
+      <option>Bregenz</option>
     </select>
     <div class="meta-box" id="sunrise">🌅 --:--</div>
     <div class="meta-box" id="sunset">🌇 --:--</div>
@@ -94,51 +98,52 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
 <div class="banner">
   <div class="banner-label">Topmeldungen 90 Sekunden:</div>
-  <div class="banner-viewport"><div class="banner-track" id="bannerText">Lade Topmeldung …</div></div>
+  <div class="banner-viewport">
+    <div class="banner-track" id="bannerText">Lade Topmeldung …</div>
+  </div>
 </div>
 
-<main class="main"><div class="grid">
+<main class="main">
+<div class="grid">
+
   <a class="tile large" id="news90Tile" href="#" target="_blank" data-share-url="#" style="background-image:url('news90.png')">
     <div class="tile-actions">
       <button class="action-btn like-btn" data-like-key="tile-news90" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
-    <div class="overlay"><h2 id="news90Headline">Lade Headline …</h2>
-<div class="sub" id="news90Subline">Nachrichten in 90 Sekunden</div></div>
+    <div class="overlay">
+      <h2 id="news90Headline">Lade Headline …</h2>
+      <div class="sub" id="news90Subline">Nachrichten in 90 Sekunden</div>
+    </div>
   </a>
 
   <a class="tile large" id="news1920Tile"
-     href="https://www.servustv.com/aktuelles/b/servus-nachrichten/aa-1y5rjcd1h2111/"
+     href="https://www.servustv.com/de/page/AA-1Y5RJCD1H2111/"
      target="_blank"
-     data-share-url="https://www.servustv.com/aktuelles/b/servus-nachrichten/aa-1y5rjcd1h2111/"
+     data-share-url="https://www.servustv.com/de/page/AA-1Y5RJCD1H2111/"
      style="background-image:url('news1920.png')">
     <div class="tile-actions">
       <button class="action-btn like-btn" data-like-key="tile-news1920" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
     <div class="overlay">
-  
-
-  <h2 id="news1920Headlines">Lade Headlines …</h2>
-
-  <div class="sub">Servus Nachrichten</div>
-</div>
+      <h2 id="news1920Headlines">Lade Headlines …</h2>
+      <div class="sub">Servus Nachrichten</div>
+    </div>
   </a>
 
   <a class="tile large" id="weather90Tile"
-     href="https://www.servustv.com/aktuelles/b/servus-wetter-in-90-sekunden/aa90vbht0krb2cmu1ahq/"
+     href="https://www.servustv.com/de/page/AA90VBHT0KRB2CMU1AHQ/"
      target="_blank"
-     data-share-url="https://www.servustv.com/aktuelles/b/servus-wetter-in-90-sekunden/aa90vbht0krb2cmu1ahq/"
+     data-share-url="https://www.servustv.com/de/page/AA90VBHT0KRB2CMU1AHQ/"
      style="background-image:url('wetter.png')">
-
     <div class="tile-actions">
       <button class="action-btn like-btn" data-like-key="tile-wetter90" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
-
     <div class="overlay">
       <h2 id="weather90Headline">Lade Wetter-Headline …</h2>
-<div class="sub" id="weather90Subline">Wetter in 90 Sekunden</div>
+      <div class="sub" id="weather90Subline">Wetter in 90 Sekunden</div>
     </div>
   </a>
 
@@ -147,7 +152,9 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
       <button class="action-btn like-btn" data-like-key="tile-tv" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
-    <div class="overlay"><h2>TV Programm</h2></div>
+    <div class="overlay">
+      <h2>TV Programm</h2>
+    </div>
   </a>
 
   <a class="tile small" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" data-share-url="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
@@ -155,8 +162,15 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
       <button class="action-btn like-btn" data-like-key="tile-google" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
-    <div class="headlines" id="googleHeadlines"><div class="title">Top Schlagzeilen</div><div class="item">• Lade Schlagzeile 1 …</div><div class="item">• Lade Schlagzeile 2 …</div><div class="item">• Lade Schlagzeile 3 …</div></div>
-    <div class="overlay"><h2>Top Nachrichten</h2></div>
+    <div class="headlines" id="googleHeadlines">
+      <div class="title">Top Schlagzeilen</div>
+      <div class="item">• Lade Schlagzeile 1 …</div>
+      <div class="item">• Lade Schlagzeile 2 …</div>
+      <div class="item">• Lade Schlagzeile 3 …</div>
+    </div>
+    <div class="overlay">
+      <h2>Top Nachrichten</h2>
+    </div>
   </a>
 
   <a class="tile small" id="liveTile" href="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" target="_blank" data-share-url="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" style="background-image:url('wetter-live.jpg')">
@@ -165,14 +179,20 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
       <button class="action-btn like-btn" data-like-key="tile-live" onclick="toggleLike(event, this)">♡ Like</button>
       <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
-    <div class="overlay"><h2>Wetterpanorama Live</h2></div>
+    <div class="overlay">
+      <h2>Wetterpanorama Live</h2>
+    </div>
   </a>
-</div></main>
+
+</div>
+</main>
+
 <div class="live-row">
   <a href="https://www.servustv.com/jetzt-live/" target="_blank">
     ▶ ServusTV Live – Hier klicken
   </a>
 </div>
+
 <div class="toast" id="toast">Link kopiert</div>
 
 <script>
@@ -219,6 +239,18 @@ const citySel = document.getElementById("city");
 citySel.addEventListener("change",()=>updateSun(citySel.value));
 updateSun(citySel.value);
 
+function normalizeUrl(data, prefix){
+  return data[prefix + "_link"] || data[prefix + "_url"] || data.url || data.href || "#";
+}
+
+function normalizeImage(data, prefix){
+  return data[prefix + "_image"] || data[prefix + "_thumbnail"] || data.image || data.thumbnail || "";
+}
+
+function normalizeTitle(data, prefix){
+  return data[prefix + "_title"] || data[prefix + "_short"] || data.short_title || data.title || data.full_title || "Neuester Titel nicht verfügbar.";
+}
+
 async function loadHeadlines(){
   try{
     const res = await fetch("headlines.json?ts=" + Date.now());
@@ -228,17 +260,19 @@ async function loadHeadlines(){
       "🔄 Update: " + new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
 
     document.getElementById("bannerText").textContent =
-      data.ticker90 || data.topmeldung90 || "Keine Topmeldung eingetragen.";
+      data.ticker || data.ticker90 || data.topmeldung90 || data.news90_ticker || "Keine Topmeldung eingetragen.";
 
     const news90Tile = document.getElementById("news90Tile");
-    if(data.news90_link && news90Tile){
-      news90Tile.href = data.news90_link;
-      news90Tile.dataset.shareUrl = data.news90_link;
+    const news90Url = data.news90_link || data.news90_url || data.url || data.href;
+
+    if(news90Url && news90Tile){
+      news90Tile.href = news90Url;
+      news90Tile.dataset.shareUrl = news90Url;
     }
 
     const news90Headline = document.getElementById("news90Headline");
     if(news90Headline){
-      const title = data.news90_title || "Neuester Titel nicht verfügbar.";
+      const title = data.news90_title || data.short_title || data.title || data.full_title || "Neuester Titel nicht verfügbar.";
       news90Headline.textContent = title.split("|")[0].trim();
     }
 
@@ -247,8 +281,9 @@ async function loadHeadlines(){
       news90Subline.textContent = "Nachrichten in 90 Sekunden";
     }
 
-    if(data.news90_image && news90Tile){
-      news90Tile.style.backgroundImage = `url('${data.news90_image}?ts=${Date.now()}')`;
+    const news90Image = data.news90_image || data.news90_thumbnail || data.image || data.thumbnail;
+    if(news90Image && news90Tile){
+      news90Tile.style.backgroundImage = `url('${news90Image}')`;
     }
 
     const news1920Tile = document.getElementById("news1920Tile");
@@ -257,26 +292,22 @@ async function loadHeadlines(){
       news1920Tile.dataset.shareUrl = data.news1920_link;
     }
 
-    const news1920Title = document.getElementById("news1920Title");
-    if(news1920Title){
-      news1920Title.textContent = data.news1920_title || "Neuester Titel nicht verfügbar.";
-    }
-
     const news1920Headlines = document.getElementById("news1920Headlines");
     if(news1920Headlines){
       let title = data.news1920_headlines || data.news1920_title || "";
       let parts = title.split("|").map(t => t.trim()).filter(Boolean);
 
-if (parts.length >= 3) {
-  parts[0] = parts[0]
-  .replace(/^.*?Nachrichten\s*19:20\s*/i, "")
-  .replace(/^Nachrichten\s*/i, "")
-  .replace(/^Servus\s*/i, "")
-  .trim();
-  parts[2] = parts[2].replace(/Nachrichten.*$/i, "").trim();
-}
+      if(parts.length >= 3){
+        parts[0] = parts[0]
+          .replace(/^.*?Nachrichten\s*19:20\s*/i, "")
+          .replace(/^Nachrichten\s*/i, "")
+          .replace(/^Servus\s*/i, "")
+          .trim();
 
-parts = parts.slice(0, 3);
+        parts[2] = parts[2].replace(/Nachrichten.*$/i, "").trim();
+      }
+
+      parts = parts.slice(0, 3);
 
       news1920Headlines.innerHTML = parts.length
         ? parts.join(" | ")
@@ -284,7 +315,7 @@ parts = parts.slice(0, 3);
     }
 
     if(data.news1920_image && news1920Tile){
-      news1920Tile.style.backgroundImage = `url('${data.news1920_image}?ts=${Date.now()}')`;
+      news1920Tile.style.backgroundImage = `url('${data.news1920_image}')`;
     }
 
     const weatherTile = document.getElementById("weather90Tile");
@@ -305,7 +336,7 @@ parts = parts.slice(0, 3);
     }
 
     if(data.weather90_image && weatherTile){
-      weatherTile.style.backgroundImage = `url('${data.weather90_image}?ts=${Date.now()}')`;
+      weatherTile.style.backgroundImage = `url('${data.weather90_image}')`;
     }
 
     const box = document.getElementById("googleHeadlines");
@@ -384,5 +415,6 @@ async function shareTile(event, tile){
 
 initLikes();
 </script>
+
 </body>
 </html>
