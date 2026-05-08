@@ -38,6 +38,28 @@ def get_episode_meta(url):
     return title, desc, image
 
 
+def get_episode_ticker(url):
+    ticker = ""
+
+    try:
+        html = requests.get(url, headers=HEADERS, timeout=20).text
+        soup = BeautifulSoup(html, "html.parser")
+        full_text = soup.get_text(" ", strip=True)
+
+        match = re.search(
+            r"([A-ZÄÖÜ][^|]{5,120}\s*\|\s*[^|]{5,120}\s*\|\s*[^|]{5,120})\s+(Jetzt ansehen|Serie anzeigen)",
+            full_text
+        )
+
+        if match:
+            ticker = clean(match.group(1))
+
+    except Exception as e:
+        print("Ticker konnte nicht gelesen werden:", e)
+
+    return ticker
+
+
 def main():
     old = {}
     if JSON_PATH.exists():
@@ -65,7 +87,7 @@ def main():
         urls = []
 
         for match in re.findall(
-            r'https://www\.servustv\.com/de/page/[A-Z0-9-]+(?:\?cid=[a-z0-9-]+)?',
+            r"https://www\.servustv\.com/de/page/[A-Z0-9-]+(?:\?cid=[a-z0-9-]+)?",
             html,
             re.I
         ):
@@ -111,8 +133,12 @@ def main():
             "image": image or "news90.png"
         }
 
-    ticker_source = latest["description"] or latest["title"]
-    topics = [clean(x) for x in re.split(r"\s*\|\s*", ticker_source) if clean(x)]
+    ticker = get_episode_ticker(latest["url"])
+
+    if not ticker:
+        ticker = latest["title"]
+
+    topics = [clean(x) for x in ticker.split("|") if clean(x)]
     topics = topics[:3] if topics else [latest["title"]]
     ticker = " | ".join(topics)
 
