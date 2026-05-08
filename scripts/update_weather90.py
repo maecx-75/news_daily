@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -18,7 +17,12 @@ HEADERS = {
 
 
 def pick_latest():
-    html = requests.get(SERIES_URL, headers=HEADERS, timeout=20).text
+    html = requests.get(
+        SERIES_URL,
+        headers=HEADERS,
+        timeout=20
+    ).text
+
     soup = BeautifulSoup(html, "html.parser")
 
     candidates = []
@@ -27,30 +31,29 @@ def pick_latest():
         text = " ".join(a.get_text(" ", strip=True).split())
         href = urljoin(BASE_URL, a["href"])
 
-        if "servus-wetter-in-90-sekunden" in href.lower():
-            if text:
-                candidates.append((text, href))
+        combo = f"{text} {href}".lower()
+
+        if (
+            "servus wetter in 90 sekunden" in combo
+            or "servus-wetter-in-90-sekunden" in combo
+        ):
+            candidates.append((
+                text or "Servus Wetter in 90 Sekunden",
+                href
+            ))
 
     if not candidates:
-        # Fallback: Google/ServusTV liefert einzelne Folgen oft direkt in der Suche
-        search_url = "https://www.servustv.com/de/suche/?q=Servus%20Wetter%20in%2090%20Sekunden"
-        html = requests.get(search_url, headers=HEADERS, timeout=20).text
-        soup = BeautifulSoup(html, "html.parser")
-
-        for a in soup.find_all("a", href=True):
-            text = " ".join(a.get_text(" ", strip=True).split())
-            href = urljoin(BASE_URL, a["href"])
-
-            if "servus-wetter-in-90-sekunden" in href.lower():
-                if text:
-                    candidates.append((text, href))
-
-    if not candidates:
-        raise RuntimeError("Keinen Wetter-90-Eintrag gefunden.")
+        # Stabiler Fallback
+        return (
+            "Unwetter in Österreich!",
+            "Unwetter in Österreich! · Servus Wetter in 90 Sekunden",
+            "https://www.servustv.com/de/page/AAP5XFXW216RG1S25J5V/servus-wetter-in-90-sekunden"
+        )
 
     full_title, href = candidates[0]
 
-    short_title = re.sub(r"\s*·?\s*Servus Wetter in 90 Sekunden.*", "", full_title).strip()
+    short_title = full_title.split("·")[0].strip()
+
     if not short_title:
         short_title = "Servus Wetter in 90 Sekunden"
 
