@@ -1,19 +1,20 @@
 {
-  "title": "Servus Nachrichten: Aktuelle Meldungen und Videos",
-  "short_title": "Servus Nachrichten: Aktuelle Meldungen und Videos",
-  "full_title": "Servus Nachrichten: Aktuelle Meldungen und Videos",
-  "url": "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111",
-  "href": "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111",
-  "image": "https://images.redbull.tv/image/upload/f_webp,c_fill,w_1920,h_1080,q_90/v1777977790332/playnet/82088f5e-b9fd-42f6-9e33-8595c3a719c5",
-  "thumbnail": "https://images.redbull.tv/image/upload/f_webp,c_fill,w_1920,h_1080,q_90/v1777977790332/playnet/82088f5e-b9fd-42f6-9e33-8595c3a719c5",
-  "topics": [
-    "Servus Nachrichten: Aktuelle Meldungen und Videos"
-  ],
-  "ticker": "Servus Nachrichten: Aktuelle Meldungen und Videos",
-  "description": "Die Nachrichten-Sendung mit den wichtigsten Themen des Tages - unabhängig und neutral.",
+  "title": "Nachrichten in 90 Sekunden - Aktuelle Folge",
+  "short_title": "Nachrichten in 90 Sekunden - Aktuelle Folge",
+  "full_title": "Nachrichten in 90 Sekunden - Aktuelle Folge",
+  "url": "https://www.servustv.com/de/page/AAH3UWY312CUTMV2HTHX/servus-nachrichten-in-90-sekunden-10-00-uhr",
+  "href": "https://www.servustv.com/de/page/AAH3UWY312CUTMV2HTHX/servus-nachrichten-in-90-sekunden-10-00-uhr",
+  "image": "news90.png",
+  "thumbnail": "news90.png",
+  "news90_title": "Nachrichten in 90 Sekunden - Aktuelle Folge",
+  "news90_link": "https://www.servustv.com/de/page/AAH3UWY312CUTMV2HTHX/servus-nachrichten-in-90-sekunden-10-00-uhr",
+  "news90_image": "news90.png",
+  "ticker": "Nachrichten in 90 Sekunden - Aktuelle Folge",
+  "ticker90": "Nachrichten in 90 Sekunden - Aktuelle Folge",
+  "topmeldung90": "Nachrichten in 90 Sekunden - Aktuelle Folge",
   "google_headlines": [
-    "Trockenheit dauert an, während sich in den Ozeanen Extremwetter zusammenbraut - Der Standard",
+    "Trump kündigt dreitägige Waffenruhe zwischen Russland und der Ukraine an - Tiroler Tageszeitung",
     "„Merke jeden Tag Fortschritte“: Doskozil nach Kehlkopf-Entfernung aus Spital entlassen - DiePresse.com",
-    "Von Erasmus bis Ukraine: Péter Magyars europäische Baustellen - DiePresse.com"
+    "Mit Péter Magyar startet Ungarn am Samstag in die Systemwende - Der Standard"
   ]
 }
