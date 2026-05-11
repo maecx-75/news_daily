@@ -1,9 +1,10 @@
 from playwright.sync_api import sync_playwright
 
 PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
-RAIL_ID = "f7c25019-f876-44ee-ab56-02e0d7bd231e"
 
 def main():
+    seen = set()
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(
@@ -11,26 +12,37 @@ def main():
             viewport={"width": 1600, "height": 1000}
         )
 
-        def handle_response(response):
-            url = response.url
+        def log_request(request):
+            url = request.url
+            low = url.lower()
 
-            try:
-                body = response.text()
-            except Exception:
-                return
+            keywords = [
+                "redbull",
+                "servustv",
+                "rail",
+                "rails",
+                "collection",
+                "collections",
+                "dynamic",
+                "v5.1",
+                "cards",
+                "search",
+                "products",
+                "page",
+                "f7c25019"
+            ]
 
-            if RAIL_ID in url or RAIL_ID in body or "Iran-Krieg" in body or "Arda Saatci" in body:
-                print("===== TREFFER =====")
-                print("URL:", url)
-                print("CONTENT-TYPE:", response.headers.get("content-type"))
-                print(body[:5000])
+            if any(k in low for k in keywords):
+                if url not in seen:
+                    seen.add(url)
+                    print("REQ:", url)
 
-        page.on("response", handle_response)
+        page.on("request", log_request)
 
         page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
 
-        for _ in range(16):
-            page.mouse.wheel(0, 900)
+        for _ in range(20):
+            page.mouse.wheel(0, 1000)
             page.wait_for_timeout(1000)
 
         browser.close()
