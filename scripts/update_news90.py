@@ -64,39 +64,46 @@ def get_episode_ticker(url):
 def find_first_news90_card():
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(user_agent=HEADERS["User-Agent"])
+        page = browser.new_page(
+            user_agent=HEADERS["User-Agent"],
+            viewport={"width": 1600, "height": 1000}
+        )
 
         page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+        page.wait_for_timeout(3000)
 
-        # Zur Reihe "Servus Nachrichten in 90 Sekunden" springen
-        page.evaluate("""
-            () => {
-              const target = [...document.querySelectorAll('h1,h2,h3,h4,div,span')]
-                .find(el => (el.innerText || '').trim() === 'Servus Nachrichten in 90 Sekunden');
-              if (target) target.scrollIntoView({block:'center'});
-            }
-        """)
+        # So lange scrollen, bis die 90-Sekunden-Reihe geladen ist
+        for _ in range(12):
+            page.mouse.wheel(0, 900)
+            page.wait_for_timeout(700)
 
-        page.wait_for_timeout(2000)
+            found = page.evaluate("""
+                () => document.body.innerText.includes('Servus Nachrichten in 90 Sekunden')
+            """)
 
-        # Zur Sicherheit noch minimal scrollen, damit Karten wirklich geladen sind
-        page.mouse.wheel(0, 300)
-        page.wait_for_timeout(1500)
+            if found:
+                break
 
         cards = page.evaluate("""
             () => {
-              const heading = [...document.querySelectorAll('h1,h2,h3,h4,div,span')]
-                .find(el => (el.innerText || '').trim() === 'Servus Nachrichten in 90 Sekunden');
+              const allTextElements = [...document.querySelectorAll('h1,h2,h3,h4,div,span,p')];
 
-              if (!heading) return [];
+              const heading = allTextElements.find(el =>
+                (el.innerText || '').trim().includes('Servus Nachrichten in 90 Sekunden')
+              );
+
+              if (!heading) {
+                return [];
+              }
 
               const headingY = heading.getBoundingClientRect().top + window.scrollY;
 
-              const all = [...document.querySelectorAll('a[href]')]
+              const links = [...document.querySelectorAll('a[href]')]
                 .map(a => {
                   const r = a.getBoundingClientRect();
-                  const text = (a.innerText || a.textContent || '').trim();
+
                   const img = a.querySelector('img');
+
                   const image =
                     img?.currentSrc ||
                     img?.src ||
@@ -105,8 +112,8 @@ def find_first_news90_card():
 
                   return {
                     href: a.href,
-                    text,
-                    image,
+                    text: (a.innerText || a.textContent || '').trim(),
+                    image: image,
                     x: r.left,
                     y: r.top + window.scrollY,
                     width: r.width,
@@ -115,37 +122,32 @@ def find_first_news90_card():
                 })
                 .filter(item =>
                   item.href.includes('/de/page/') &&
+                  !item.href.includes('AA-1Y5RJCD1H2111') &&
                   item.y > headingY &&
-                  item.width > 120 &&
-                  item.height > 80 &&
-                  item.text &&
-                  item.text.toLowerCase().includes('servus nachrichten in 90 sekunden')
+                  item.width > 150 &&
+                  item.height > 90
                 )
                 .sort((a,b) => {
-                  if (Math.abs(a.y - b.y) > 80) return a.y - b.y;
+                  if (Math.abs(a.y - b.y) > 100) {
+                    return a.y - b.y;
+                  }
                   return a.x - b.x;
                 });
 
-              return all;
+              return links;
             }
         """)
 
         browser.close()
 
     if not cards:
-        print("DEBUG: Gefundene Karten:")
-        for item in cards[:20]:
-            print("---")
-            print("TEXT:", item.get("text"))
-            print("HREF:", item.get("href"))
-            print("IMAGE:", item.get("image"))
-            print("X/Y:", item.get("x"), item.get("y"))
+        print("DEBUG: Keine Karten gefunden.")
         raise RuntimeError("Keine sichtbare News-90-Kachel gefunden.")
 
     first = cards[0]
 
     return {
-        "url": first["href"].split("&")[0],
+        "url": first["href"].split("?")[0] if "cid=" not in first["href"] else first["href"],
         "card_text": clean(first["text"]),
         "card_image": first["image"]
     }
