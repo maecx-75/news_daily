@@ -13,8 +13,6 @@ JSON_PATH = ROOT / "headlines.json"
 PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 BASE_URL = "https://www.servustv.com"
 
-FALLBACK_URL = "https://www.servustv.com/de/page/AASN6K1VFDPTJSY6YQ5D?cid=f7c25019-f876-44ee-ab56-02e0d7bd231e"
-
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -35,12 +33,14 @@ def get_episode_meta(url):
     desc = get_meta(soup, "og:description")
     image = get_meta(soup, "og:image")
 
+    if not title:
+        h1 = soup.find("h1")
+        title = clean(h1.get_text(" ", strip=True)) if h1 else ""
+
     return title, desc, image
 
 
 def get_episode_ticker(url):
-    ticker = ""
-
     try:
         html = requests.get(url, headers=HEADERS, timeout=20).text
         soup = BeautifulSoup(html, "html.parser")
@@ -53,12 +53,95 @@ def get_episode_ticker(url):
         )
 
         if match:
-            ticker = clean(match.group(1))
+            return clean(match.group(1))
 
     except Exception as e:
         print("Ticker konnte nicht gelesen werden:", e)
 
-    return ticker
+    return ""
+
+
+def find_first_news90_card():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent=HEADERS["User-Agent"])
+
+        page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+
+        # Zur Reihe "Servus Nachrichten in 90 Sekunden" springen
+        page.evaluate("""
+            () => {
+              const target = [...document.querySelectorAll('h1,h2,h3,h4,div,span')]
+                .find(el => (el.innerText || '').trim() === 'Servus Nachrichten in 90 Sekunden');
+              if (target) target.scrollIntoView({block:'center'});
+            }
+        """)
+
+        page.wait_for_timeout(2000)
+
+        # Zur Sicherheit noch minimal scrollen, damit Karten wirklich geladen sind
+        page.mouse.wheel(0, 300)
+        page.wait_for_timeout(1500)
+
+        cards = page.evaluate("""
+            () => {
+              const heading = [...document.querySelectorAll('h1,h2,h3,h4,div,span')]
+                .find(el => (el.innerText || '').trim() === 'Servus Nachrichten in 90 Sekunden');
+
+              if (!heading) return [];
+
+              const headingY = heading.getBoundingClientRect().top + window.scrollY;
+
+              const all = [...document.querySelectorAll('a[href]')]
+                .map(a => {
+                  const r = a.getBoundingClientRect();
+                  const text = (a.innerText || a.textContent || '').trim();
+                  const img = a.querySelector('img');
+                  const image =
+                    img?.currentSrc ||
+                    img?.src ||
+                    img?.getAttribute('data-src') ||
+                    '';
+
+                  return {
+                    href: a.href,
+                    text,
+                    image,
+                    x: r.left,
+                    y: r.top + window.scrollY,
+                    width: r.width,
+                    height: r.height
+                  };
+                })
+                .filter(item =>
+                  item.href.includes('/de/page/') &&
+                  item.y > headingY &&
+                  item.width > 120 &&
+                  item.height > 80 &&
+                  item.text &&
+                  item.text.toLowerCase().includes('servus nachrichten in 90 sekunden')
+                )
+                .sort((a,b) => {
+                  if (Math.abs(a.y - b.y) > 80) return a.y - b.y;
+                  return a.x - b.x;
+                });
+
+              return all;
+            }
+        """)
+
+        browser.close()
+
+    if not cards:
+        raise RuntimeError("Keine sichtbare News-90-Kachel gefunden.")
+
+    first = cards[0]
+
+    return {
+        "url": first["href"].split("&")[0],
+        "card_text": clean(first["text"]),
+        "card_image": first["image"]
+    }
 
 
 def main():
@@ -69,99 +152,47 @@ def main():
         except Exception:
             old = {}
 
-    latest = None
+    card = find_first_news90_card()
 
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page(user_agent=HEADERS["User-Agent"])
+    title, desc, image = get_episode_meta(card["url"])
 
-            page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+    if not title:
+        # Kartentext bereinigen
+        title = card["card_text"]
+        title = title.replace("2 Min.", "").replace("Servus Nachrichten in 90 Sekunden", "")
+        title = clean(title)
 
-            for _ in range(10):
-                page.mouse.wheel(0, 1800)
-                page.wait_for_timeout(800)
+    if not image:
+        image = card["card_image"] or "news90.png"
 
-            html = page.content()
-            browser.close()
-
-        urls = []
-
-        for match in re.findall(
-            r"https://www\.servustv\.com/de/page/[A-Z0-9-]+(?:\?cid=[a-z0-9-]+)?",
-            html,
-            re.I
-        ):
-            clean_url = match.strip()
-            if clean_url not in urls and "AA-1Y5RJCD1H2111" not in clean_url:
-                urls.append(clean_url)
-
-        soup = BeautifulSoup(html, "html.parser")
-
-        for a in soup.find_all("a", href=True):
-            href = urljoin(BASE_URL, a["href"])
-            if "/de/page/" in href and "AA-1Y5RJCD1H2111" not in href:
-                if href not in urls:
-                    urls.append(href)
-
-        for url in urls[:60]:
-            try:
-                title, desc, image = get_episode_meta(url)
-            except Exception:
-                continue
-
-            combo = f"{title} {desc}".lower()
-
-            if "servus nachrichten in 90 sekunden" in combo:
-                latest = {
-                    "url": url,
-                    "title": title or "Servus Nachrichten in 90 Sekunden",
-                    "description": desc,
-                    "image": image or "news90.png"
-                }
-                break
-
-    except Exception as e:
-        print("Scraper-Fehler:", e)
-
-    if not latest:
-        title, desc, image = get_episode_meta(FALLBACK_URL)
-
-        latest = {
-            "url": FALLBACK_URL,
-            "title": title or "Servus Nachrichten in 90 Sekunden",
-            "description": desc or "Aktuelle Folge",
-            "image": image or "news90.png"
-        }
-
-    ticker = get_episode_ticker(latest["url"])
+    ticker = get_episode_ticker(card["url"])
 
     if not ticker:
-        ticker = latest["title"]
+        ticker = title
 
     topics = [clean(x) for x in ticker.split("|") if clean(x)]
-    topics = topics[:3] if topics else [latest["title"]]
+    topics = topics[:3] if topics else [title]
     ticker = " | ".join(topics)
 
     data = {
-        "title": latest["title"],
-        "short_title": latest["title"],
-        "full_title": latest["title"],
-        "url": latest["url"],
-        "href": latest["url"],
-        "image": latest["image"],
-        "thumbnail": latest["image"],
+        "title": title,
+        "short_title": title,
+        "full_title": title,
+        "url": card["url"],
+        "href": card["url"],
+        "image": image,
+        "thumbnail": image,
 
-        "news90_title": latest["title"],
-        "news90_link": latest["url"],
-        "news90_image": latest["image"],
-        "news90_thumbnail": latest["image"],
+        "news90_title": title,
+        "news90_link": card["url"],
+        "news90_image": image,
+        "news90_thumbnail": image,
 
         "topics": topics,
         "ticker": ticker,
         "ticker90": ticker,
         "topmeldung90": ticker,
-        "description": latest["description"]
+        "description": desc
     }
 
     if "google_headlines" in old:
