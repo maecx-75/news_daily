@@ -1,47 +1,51 @@
-import json
-import requests
+from playwright.sync_api import sync_playwright
 
-API_URL = "https://tv-api.redbull.com/products/dynamic/v5.1/stv/de/us/AA-1Y5RJCD1H2111"
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
-}
-
-def collect_strings(obj, out):
-    if isinstance(obj, dict):
-        for v in obj.values():
-            collect_strings(v, out)
-    elif isinstance(obj, list):
-        for item in obj:
-            collect_strings(item, out)
-    elif isinstance(obj, str):
-        out.append(obj)
+PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 
 def main():
-    res = requests.get(API_URL, headers=HEADERS, timeout=30)
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(
+            user_agent="Mozilla/5.0",
+            viewport={"width": 1600, "height": 1000}
+        )
 
-    print("STATUS:", res.status_code)
-    print("CONTENT-TYPE:", res.headers.get("content-type"))
+        def handle_response(response):
+            url = response.url
+            try:
+                ct = response.headers.get("content-type", "")
+                if "json" not in ct and "text" not in ct and "javascript" not in ct:
+                    return
 
-    data = res.json()
+                body = response.text()
 
-    strings = []
-    collect_strings(data, strings)
+                keywords = [
+                    "Iran-Krieg",
+                    "Iran",
+                    "Servus Nachrichten in 90 Sekunden",
+                    "Arda Saatci",
+                    "Virus-Schiff",
+                    "Geld-Transporte"
+                ]
 
-    print("ANZAHL STRINGS:", len(strings))
+                if any(k in body for k in keywords):
+                    print("===== TREFFER RESPONSE =====")
+                    print("URL:", url)
+                    print("CONTENT-TYPE:", ct)
+                    print(body[:3000])
 
-    print("TREFFER MIT 90 / sekunden / Iran / Servus:")
-    for s in strings:
-        low = s.lower()
-        if "90" in low or "sekunden" in low or "iran" in low or "servus" in low:
-            print("---")
-            print(s[:500])
+            except Exception:
+                pass
 
-    print("ERSTE 80 STRINGS:")
-    for s in strings[:80]:
-        print("---")
-        print(s[:300])
+        page.on("response", handle_response)
+
+        page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+
+        for _ in range(12):
+            page.mouse.wheel(0, 1000)
+            page.wait_for_timeout(1000)
+
+        browser.close()
 
 if __name__ == "__main__":
     main()
