@@ -133,6 +133,13 @@ def find_first_news90_card():
         browser.close()
 
     if not cards:
+        print("DEBUG: Gefundene Karten:")
+        for item in cards[:20]:
+            print("---")
+            print("TEXT:", item.get("text"))
+            print("HREF:", item.get("href"))
+            print("IMAGE:", item.get("image"))
+            print("X/Y:", item.get("x"), item.get("y"))
         raise RuntimeError("Keine sichtbare News-90-Kachel gefunden.")
 
     first = cards[0]
