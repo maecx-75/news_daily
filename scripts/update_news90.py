@@ -48,7 +48,7 @@ def get_ticker(text):
     return ""
 
 
-def find_latest_id_and_image():
+def find_latest_ids_and_images():
     seen = []
 
     with sync_playwright() as p:
@@ -88,7 +88,7 @@ def find_latest_id_and_image():
         raise RuntimeError("Keine Ressourcen-IDs gefunden.")
 
     # Die erste sichtbare 90-Sekunden-Kachel ist nach deinem Log die erste neue Ressourcen-ID
-    return seen[0]
+    return seen
 
 
 def main():
@@ -100,9 +100,31 @@ def main():
         except Exception:
             old = {}
 
-    latest = find_latest_id_and_image()
+    candidates = find_latest_ids_and_images()
 
-    page_url = BASE_URL + latest["id"]
+latest = None
+
+for candidate in candidates:
+    page_url = BASE_URL + candidate["id"]
+
+    title, desc, meta_image, text = get_episode_meta(page_url)
+
+    check = f"{title} {desc} {text}".lower()
+
+    if "servus nachrichten in 90 sekunden" in check:
+        latest = {
+            "id": candidate["id"],
+            "image": candidate["image"],
+            "page_url": page_url,
+            "title": title,
+            "desc": desc,
+            "meta_image": meta_image,
+            "text": text
+        }
+        break
+
+if not latest:
+    raise RuntimeError("Keine echte 90-Sekunden-Folge gefunden.")
 
     title, desc, meta_image, text = get_episode_meta(page_url)
 
