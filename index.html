@@ -253,27 +253,48 @@ function normalizeTitle(data, prefix){
 
 async function loadHeadlines(){
   try{
-    const res = await fetch("headlines.json?ts=" + Date.now());
+    const res = await fetch("headlines.json?ts=" + Date.now(), {
+      cache: "no-store"
+    });
     const data = await res.json();
 
     document.getElementById("lastUpdate").textContent =
       "🔄 Update: " + new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
 
-    document.getElementById("bannerText").textContent =
-      data.ticker || data.ticker90 || data.topmeldung90 || data.news90_ticker || "Keine Topmeldung eingetragen.";
+    // Ticker 90 Sekunden
+    const tickerText =
+      data.ticker90 ||
+      data.topmeldung90 ||
+      data.ticker ||
+      data.news90_ticker ||
+      "Keine Topmeldung eingetragen.";
 
+    document.getElementById("bannerText").textContent = tickerText;
+
+    // 90 Sekunden Kachel
     const news90Tile = document.getElementById("news90Tile");
-    const news90Url = data.news90_link || data.news90_url || data.url || data.href;
+    const news90Url =
+      data.news90_link ||
+      data.news90_url ||
+      data.url ||
+      data.href ||
+      "#";
 
-    if(news90Url && news90Tile){
+    if(news90Tile){
       news90Tile.href = news90Url;
       news90Tile.dataset.shareUrl = news90Url;
     }
 
     const news90Headline = document.getElementById("news90Headline");
+    const news90Title =
+      data.news90_title ||
+      data.short_title ||
+      data.title ||
+      data.full_title ||
+      "Neuester Titel nicht verfügbar.";
+
     if(news90Headline){
-      const title = data.news90_title || data.short_title || data.title || data.full_title || "Neuester Titel nicht verfügbar.";
-      news90Headline.textContent = title.split("|")[0].trim();
+      news90Headline.textContent = news90Title.split("|")[0].trim();
     }
 
     const news90Subline = document.getElementById("news90Subline");
@@ -281,11 +302,20 @@ async function loadHeadlines(){
       news90Subline.textContent = "Nachrichten in 90 Sekunden";
     }
 
-    const news90Image = data.news90_image || data.news90_thumbnail || data.image || data.thumbnail;
-    if(news90Image && news90Tile){
-      news90Tile.style.backgroundImage = `url('${news90Image}')`;
+    const news90Image =
+      data.news90_image ||
+      data.news90_thumbnail ||
+      data.image ||
+      data.thumbnail ||
+      "news90.png";
+
+    if(news90Tile && news90Image){
+      const separator = news90Image.includes("?") ? "&" : "?";
+      news90Tile.style.backgroundImage =
+        `url('${news90Image}${separator}cache=${Date.now()}')`;
     }
 
+    // 19:20 Kachel
     const news1920Tile = document.getElementById("news1920Tile");
     if(data.news1920_link && news1920Tile){
       news1920Tile.href = data.news1920_link;
@@ -318,6 +348,7 @@ async function loadHeadlines(){
       news1920Tile.style.backgroundImage = `url('${data.news1920_image}')`;
     }
 
+    // Wetter 90 Kachel
     const weatherTile = document.getElementById("weather90Tile");
     if(data.weather90_link && weatherTile){
       weatherTile.href = data.weather90_link;
@@ -330,15 +361,11 @@ async function loadHeadlines(){
       weatherHeadline.textContent = title.split("|")[0].trim();
     }
 
-    const weatherSubline = document.getElementById("weather90Subline");
-    if(weatherSubline){
-      weatherSubline.textContent = "Wetter in 90 Sekunden";
-    }
-
     if(data.weather90_image && weatherTile){
       weatherTile.style.backgroundImage = `url('${data.weather90_image}')`;
     }
 
+    // Google Headlines
     const box = document.getElementById("googleHeadlines");
     if(box){
       const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
