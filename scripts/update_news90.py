@@ -1,28 +1,39 @@
-import re
-import requests
+from playwright.sync_api import sync_playwright
 
-URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
+PAGE_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
+RAIL_ID = "f7c25019-f876-44ee-ab56-02e0d7bd231e"
 
-html = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30).text
+def main():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(
+            user_agent="Mozilla/5.0",
+            viewport={"width": 1600, "height": 1000}
+        )
 
-keywords = [
-    "Iran-Krieg",
-    "Arda Saatci",
-    "Iran droht Europa",
-    "Geld-Transporte",
-    "Virus-Schiff",
-    "Servus Nachrichten in 90 Sekunden"
-]
+        def handle_response(response):
+            url = response.url
 
-for kw in keywords:
-    idx = html.find(kw)
-    print("KEYWORD:", kw, "INDEX:", idx)
+            try:
+                body = response.text()
+            except Exception:
+                return
 
-    if idx != -1:
-        start = max(0, idx - 1500)
-        end = min(len(html), idx + 2500)
-        snippet = html[start:end]
+            if RAIL_ID in url or RAIL_ID in body or "Iran-Krieg" in body or "Arda Saatci" in body:
+                print("===== TREFFER =====")
+                print("URL:", url)
+                print("CONTENT-TYPE:", response.headers.get("content-type"))
+                print(body[:5000])
 
-        print("===== SNIPPET START =====")
-        print(snippet)
-        print("===== SNIPPET END =====")
+        page.on("response", handle_response)
+
+        page.goto(PAGE_URL, wait_until="networkidle", timeout=60000)
+
+        for _ in range(16):
+            page.mouse.wheel(0, 900)
+            page.wait_for_timeout(1000)
+
+        browser.close()
+
+if __name__ == "__main__":
+    main()
