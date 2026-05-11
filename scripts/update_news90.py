@@ -68,6 +68,7 @@ def find_latest_ids_and_images():
 
             if m:
                 item_id = m.group(1)
+
                 if item_id.startswith("AA") and item_id not in [x["id"] for x in seen]:
                     seen.append({
                         "id": item_id,
@@ -87,7 +88,6 @@ def find_latest_ids_and_images():
     if not seen:
         raise RuntimeError("Keine Ressourcen-IDs gefunden.")
 
-    # Die erste sichtbare 90-Sekunden-Kachel ist nach deinem Log die erste neue Ressourcen-ID
     return seen
 
 
@@ -102,33 +102,38 @@ def main():
 
     candidates = find_latest_ids_and_images()
 
-latest = None
+    latest = None
 
-for candidate in candidates:
-    page_url = BASE_URL + candidate["id"]
+    for candidate in candidates:
+        page_url = BASE_URL + candidate["id"]
 
-    title, desc, meta_image, text = get_episode_meta(page_url)
+        try:
+            title, desc, meta_image, text = get_episode_meta(page_url)
+        except Exception:
+            continue
 
-    check = f"{title} {desc} {text}".lower()
+        check = f"{title} {desc} {text}".lower()
 
-    if "servus nachrichten in 90 sekunden" in check:
-        latest = {
-            "id": candidate["id"],
-            "image": candidate["image"],
-            "page_url": page_url,
-            "title": title,
-            "desc": desc,
-            "meta_image": meta_image,
-            "text": text
-        }
-        break
+        if "servus nachrichten in 90 sekunden" in check:
+            latest = {
+                "id": candidate["id"],
+                "image": candidate["image"],
+                "page_url": page_url,
+                "title": title or "Servus Nachrichten in 90 Sekunden",
+                "desc": desc,
+                "meta_image": meta_image,
+                "text": text
+            }
+            break
 
-if not latest:
-    raise RuntimeError("Keine echte 90-Sekunden-Folge gefunden.")
+    if not latest:
+        raise RuntimeError("Keine echte 90-Sekunden-Folge gefunden.")
 
-    title, desc, meta_image, text = get_episode_meta(page_url)
-
-    image = meta_image or latest["image"] or "news90.png"
+    title = latest["title"]
+    desc = latest["desc"]
+    page_url = latest["page_url"]
+    text = latest["text"]
+    image = latest["meta_image"] or latest["image"] or "news90.png"
 
     ticker = get_ticker(text)
 
