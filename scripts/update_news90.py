@@ -1,20 +1,18 @@
 import json
 import re
 from pathlib import Path
-from urllib.parse import urljoin, unquote
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 
 SEARCH_URL = "https://www.servustv.com/de/search?q=Servus%20Nachrichten%20in%2090%20Sekunden"
 BASE_URL = "https://www.servustv.com"
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
+HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
 def clean(text):
@@ -24,6 +22,13 @@ def clean(text):
 def get_meta(soup, key):
     tag = soup.find("meta", attrs={"property": key}) or soup.find("meta", attrs={"name": key})
     return clean(tag.get("content", "")) if tag else ""
+
+
+def normalize_page_url(raw):
+    raw = raw.replace("page:", "")
+    if raw.startswith("http"):
+        return raw.split("?")[0]
+    return urljoin(BASE_URL, raw).split("?")[0]
 
 
 def get_episode_meta(url):
@@ -44,34 +49,100 @@ def get_ticker(text):
         text,
         re.I
     )
-
-    if match:
-        return clean(match.group(1))
-
-    return ""
+    return clean(match.group(1)) if match else ""
 
 
-def collect_episode_links():
-    html = requests.get(SEARCH_URL, headers=HEADERS, timeout=30).text
-    soup = BeautifulSoup(html, "html.parser")
+def collect_candidates():
+    candidates = []
+    response_bodies = []
 
-    links = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(
+            user_agent=HEADERS["User-Agent"],
+            viewport={"width": 1600, "height": 1000}
+        )
 
-    # normale Links
-    for a in soup.find_all("a", href=True):
-        href = urljoin(BASE_URL, a["href"])
-        href = unquote(href)
+        def handle_response(response):
+            try:
+                body = response.text()
+            except Exception:
+                return
 
-        if "/de/page/" in href and href not in links:
-            links.append(href)
+            if "Servus Nachrichten in 90 Sekunden" in body:
+                response_bodies.append(body)
 
-    # Links im HTML/JSON
-    for match in re.findall(r"https://www\.servustv\.com/de/page/[A-Z0-9]+[^\"'<>\s]*", html):
-        href = unquote(match)
-        if href not in links:
-            links.append(href)
+        page.on("response", handle_response)
 
-    return links
+        page.goto(SEARCH_URL, wait_until="networkidle", timeout=60000)
+
+        for _ in range(8):
+            page.mouse.wheel(0, 1000)
+            page.wait_for_timeout(800)
+
+        html = page.content()
+
+        links = page.eval_on_selector_all(
+            "a[href]",
+            """
+            els => els.map(a => ({
+                href: a.href,
+                text: (a.innerText || a.textContent || "").trim()
+            }))
+            """
+        )
+
+        browser.close()
+
+    # 1. Links aus sichtbaren Suchergebnissen
+    for item in links:
+        href = normalize_page_url(item.get("href", ""))
+        text = item.get("text", "")
+
+        if "/de/page/" in href:
+            candidates.append({
+                "url": href,
+                "hint": text
+            })
+
+    # 2. IDs/Links aus HTML und Response-Bodies
+    blob = html + "\n".join(response_bodies)
+
+    for m in re.findall(r'https://www\.servustv\.com/de/page/(?:page:)?([A-Z0-9]+)', blob):
+        candidates.append({
+            "url": f"{BASE_URL}/de/page/{m}",
+            "hint": ""
+        })
+
+    for m in re.findall(r'"detail_page_id"\s*:\s*"page:([A-Z0-9]+)"', blob):
+        candidates.append({
+            "url": f"{BASE_URL}/de/page/{m}",
+            "hint": ""
+        })
+
+    for m in re.findall(r'"id"\s*:\s*"([A-Z0-9]{15,25})"', blob):
+        candidates.append({
+            "url": f"{BASE_URL}/de/page/{m}",
+            "hint": ""
+        })
+
+    # Duplikate entfernen
+    unique = []
+    seen = set()
+
+    for item in candidates:
+        url = item["url"]
+
+        if url in seen:
+            continue
+
+        if "AA-1Y5RJCD1H2111" in url:
+            continue
+
+        seen.add(url)
+        unique.append(item)
+
+    return unique
 
 
 def main():
@@ -83,24 +154,30 @@ def main():
         except Exception:
             old = {}
 
-    links = collect_episode_links()
+    candidates = collect_candidates()
 
-    if not links:
-        raise RuntimeError("Keine Links in der ServusTV-Suche gefunden.")
+    print("GEFUNDENE KANDIDATEN:", len(candidates))
 
     latest = None
 
-    for link in links[:30]:
+    for item in candidates[:80]:
+        url = item["url"]
+
         try:
-            title, desc, image, text = get_episode_meta(link)
+            title, desc, image, text = get_episode_meta(url)
         except Exception:
             continue
 
         check = f"{title} {desc} {text}".lower()
 
+        print("PRÜFE:", url)
+        print("TITLE:", title)
+        print("DESC:", desc)
+        print("---")
+
         if "servus nachrichten in 90 sekunden" in check:
             latest = {
-                "url": link,
+                "url": url,
                 "title": title or "Servus Nachrichten in 90 Sekunden",
                 "description": desc,
                 "image": image or "news90.png",
