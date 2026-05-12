@@ -23,7 +23,9 @@ jobs:
 
       - run: python -m playwright install chromium
 
-      - run: python scripts/update_news90.py
+      # News90 vorübergehend deaktiviert
+      # - run: python scripts/update_news90.py
+
       - run: python scripts/update_news1920.py
       - run: python scripts/update_google_headlines.py
       - run: python scripts/update_weather90.py
