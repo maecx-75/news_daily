@@ -26,8 +26,9 @@ jobs:
       - name: Install Playwright browser
         run: python -m playwright install chromium
 
-      - name: Update News 90
-        run: python scripts/update_news90.py
+      # TEMPORÄR DEAKTIVIERT
+      # - name: Update News 90
+      #   run: python scripts/update_news90.py
 
       - run: python scripts/update_news1920.py
       - run: python scripts/update_google_headlines.py
