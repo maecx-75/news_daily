@@ -52,56 +52,15 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 .live-row{margin:30px auto;text-align:center}
 .live-row a{display:inline-block;background:linear-gradient(90deg,#c40012,#8b000c);color:white;font-size:22px;font-weight:800;padding:16px 30px;border-radius:12px;text-decoration:none;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:transform .2s ease}
 .live-row a:hover{transform:scale(1.05)}
-.tv-modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.88);
-  z-index:99999;
-  padding:30px;
-}
 
-.tv-modal-content{
-  max-width:1000px;
-  margin:auto;
-  background:#111;
-  border-radius:18px;
-  padding:30px;
-  max-height:85vh;
-  overflow-y:auto;
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 14px 32px rgba(0,0,0,.35);
-}
+.tv-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;padding:30px}
+.tv-modal-content{max-width:1000px;margin:auto;background:#111;border-radius:18px;padding:30px;max-height:85vh;overflow-y:auto;border:1px solid rgba(255,255,255,.08);box-shadow:0 14px 32px rgba(0,0,0,.35)}
+.close-btn{border:none;background:none;color:#fff;font-size:34px;cursor:pointer;float:right}
+.program-item{padding:16px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.program-time{color:#ff3040;font-weight:900;margin-bottom:5px}
+.program-title{font-size:22px;font-weight:800}
+.program-genre{opacity:.7;margin-top:4px}
 
-.close-btn{
-  border:none;
-  background:none;
-  color:#fff;
-  font-size:34px;
-  cursor:pointer;
-  float:right;
-}
-
-.program-item{
-  padding:16px 0;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.program-time{
-  color:#ff3040;
-  font-weight:900;
-  margin-bottom:5px;
-}
-
-.program-title{
-  font-size:22px;
-  font-weight:800;
-}
-
-.program-genre{
-  opacity:.7;
-  margin-top:4px;
-}
 @media(max-width:1100px){
   .topbar{grid-template-columns:1fr;text-align:center}
   .meta{justify-content:center}
@@ -196,30 +155,16 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     </div>
   </a>
 
- <div class="tile small"
-     onclick="openTvProgram()"
-     style="background-image:url('SERVUSTV_programm.jpg');cursor:pointer;">
-
+  <div class="tile small" onclick="openTvProgram()" style="background-image:url('SERVUSTV_programm.jpg');cursor:pointer;">
     <div class="tile-actions">
-      <button class="action-btn like-btn"
-              data-like-key="tile-tv"
-              onclick="toggleLike(event, this)">
-              ♡ Like
-      </button>
-
-      <button class="action-btn"
-              onclick="event.stopPropagation();openTvProgram();">
-              📺 Öffnen
-      </button>
+      <button class="action-btn like-btn" data-like-key="tile-tv" onclick="toggleLike(event, this)">♡ Like</button>
+      <button class="action-btn" onclick="event.preventDefault();event.stopPropagation();openTvProgram();">📺 Öffnen</button>
     </div>
-
     <div class="overlay">
       <h2>TV Programm</h2>
-      <div class="sub" id="tv-now">
-        Lade aktuelles Programm …
-      </div>
+      <div class="sub" id="tv-now">Lade aktuelles Programm …</div>
     </div>
-</div>
+  </div>
 
   <a class="tile small" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" data-share-url="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
     <div class="tile-actions">
@@ -258,6 +203,14 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 </div>
 
 <div class="toast" id="toast">Link kopiert</div>
+
+<div class="tv-modal" id="tvModal">
+  <div class="tv-modal-content">
+    <button class="close-btn" onclick="closeTvProgram()">×</button>
+    <h2 style="margin-bottom:24px;">ServusTV Programm heute</h2>
+    <div id="tvProgramList"></div>
+  </div>
+</div>
 
 <script>
 function updateTime(){
@@ -325,7 +278,6 @@ async function loadHeadlines(){
     document.getElementById("lastUpdate").textContent =
       "🔄 Update: " + new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
 
-    // Ticker 90 Sekunden
     const tickerText =
       data.ticker90 ||
       data.topmeldung90 ||
@@ -335,7 +287,6 @@ async function loadHeadlines(){
 
     document.getElementById("bannerText").textContent = tickerText;
 
-    // 90 Sekunden Kachel
     const news90Tile = document.getElementById("news90Tile");
     const news90Url =
       data.news90_link ||
@@ -379,7 +330,6 @@ async function loadHeadlines(){
         `url('${news90Image}${separator}cache=${Date.now()}')`;
     }
 
-    // 19:20 Kachel
     const news1920Tile = document.getElementById("news1920Tile");
     if(data.news1920_link && news1920Tile){
       news1920Tile.href = data.news1920_link;
@@ -412,7 +362,6 @@ async function loadHeadlines(){
       news1920Tile.style.backgroundImage = `url('${data.news1920_image}')`;
     }
 
-    // Wetter 90 Kachel
     const weatherTile = document.getElementById("weather90Tile");
     if(data.weather90_link && weatherTile){
       weatherTile.href = data.weather90_link;
@@ -429,7 +378,6 @@ async function loadHeadlines(){
       weatherTile.style.backgroundImage = `url('${data.weather90_image}')`;
     }
 
-    // Google Headlines
     const box = document.getElementById("googleHeadlines");
     if(box){
       const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
@@ -504,56 +452,42 @@ async function shareTile(event, tile){
   }catch(e){}
 }
 
-initLikes();
 async function loadTvProgram(){
-
   try{
-
     const res = await fetch("tv_program.json?ts=" + Date.now(),{
       cache:"no-store"
     });
 
     const data = await res.json();
-
     const list = document.getElementById("tvProgramList");
     const nowBox = document.getElementById("tv-now");
 
-    if(!list) return;
+    if(!list || !nowBox) return;
 
     list.innerHTML = "";
 
     if(data.program && data.program.length){
-
-      nowBox.textContent =
-        data.program[0].start + " • " + data.program[0].title;
+      nowBox.textContent = data.program[0].start + " • " + data.program[0].title;
 
       data.program.forEach(item=>{
-
         const div = document.createElement("div");
-
         div.className = "program-item";
-
         div.innerHTML = `
-          <div class="program-time">
-            ${item.start} – ${item.end}
-          </div>
-
-          <div class="program-title">
-            ${item.title}
-          </div>
-
-          <div class="program-genre">
-            ${item.genre || ""}
-          </div>
+          <div class="program-time">${item.start} – ${item.end}</div>
+          <div class="program-title">${item.title}</div>
+          <div class="program-genre">${item.genre || ""}</div>
         `;
-
         list.appendChild(div);
       });
-
+    }else{
+      nowBox.textContent = "TV Programm aktuell nicht verfügbar.";
+      list.innerHTML = '<div class="program-item">TV Programm aktuell nicht verfügbar.</div>';
     }
 
   }catch(e){
     console.log("TV Programm Fehler:",e);
+    const nowBox = document.getElementById("tv-now");
+    if(nowBox) nowBox.textContent = "TV Programm konnte nicht geladen werden.";
   }
 }
 
@@ -566,31 +500,13 @@ function closeTvProgram(){
   document.getElementById("tvModal").style.display = "none";
 }
 
-loadTvProgram();
+window.addEventListener("keydown",function(e){
+  if(e.key === "Escape") closeTvProgram();
+});
 
 initLikes();
+loadTvProgram();
 </script>
-
-<div class="tv-modal" id="tvModal">
-
-  <div class="tv-modal-content">
-
-    <button class="close-btn"
-            onclick="closeTvProgram()">
-            ×
-    </button>
-
-    <h2 style="margin-bottom:24px;">
-      ServusTV Programm heute
-    </h2>
-
-    <div id="tvProgramList">
-
-    </div>
-
-  </div>
-
-</div>
 
 </body>
 </html>
