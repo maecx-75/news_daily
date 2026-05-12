@@ -1,0 +1,223 @@
+{
+  "source": "https://tvheute.at/servustv-programm/heute-im-tv",
+  "updated": "2026-05-12T13:50:35",
+  "program": [
+    {
+      "start": "06:00",
+      "end": "09:23",
+      "genre": "",
+      "title": "Das Wetterpanorama bei ServusTV",
+      "description": ""
+    },
+    {
+      "start": "09:23",
+      "end": "09:25",
+      "genre": "Info",
+      "title": "09:25",
+      "description": ""
+    },
+    {
+      "start": "09:25",
+      "end": "10:15",
+      "genre": "Doku",
+      "title": "10:15",
+      "description": ""
+    },
+    {
+      "start": "10:15",
+      "end": "11:08",
+      "genre": "Show",
+      "title": "11:08",
+      "description": ""
+    },
+    {
+      "start": "11:08",
+      "end": "11:10",
+      "genre": "Info",
+      "title": "11:10",
+      "description": ""
+    },
+    {
+      "start": "11:10",
+      "end": "12:00",
+      "genre": "Doku",
+      "title": "12:00",
+      "description": ""
+    },
+    {
+      "start": "12:00",
+      "end": "12:58",
+      "genre": "Info",
+      "title": "12:58",
+      "description": ""
+    },
+    {
+      "start": "12:58",
+      "end": "13:00",
+      "genre": "Info",
+      "title": "13:00",
+      "description": ""
+    },
+    {
+      "start": "13:00",
+      "end": "14:00",
+      "genre": "Doku",
+      "title": "14:00",
+      "description": ""
+    },
+    {
+      "start": "14:00",
+      "end": "15:00",
+      "genre": "Doku",
+      "title": "15:00",
+      "description": ""
+    },
+    {
+      "start": "15:00",
+      "end": "15:50",
+      "genre": "Info",
+      "title": "15:50",
+      "description": ""
+    },
+    {
+      "start": "15:50",
+      "end": "16:55",
+      "genre": "Serie",
+      "title": "16:55",
+      "description": ""
+    },
+    {
+      "start": "16:55",
+      "end": "17:00",
+      "genre": "Info",
+      "title": "17:00",
+      "description": ""
+    },
+    {
+      "start": "17:00",
+      "end": "18:00",
+      "genre": "Show",
+      "title": "18:00",
+      "description": ""
+    },
+    {
+      "start": "18:00",
+      "end": "18:05",
+      "genre": "Info",
+      "title": "18:05",
+      "description": ""
+    },
+    {
+      "start": "18:05",
+      "end": "18:30",
+      "genre": "Info",
+      "title": "18:30",
+      "description": ""
+    },
+    {
+      "start": "18:30",
+      "end": "19:17",
+      "genre": "Show",
+      "title": "19:17",
+      "description": ""
+    },
+    {
+      "start": "19:17",
+      "end": "19:20",
+      "genre": "Info",
+      "title": "19:20",
+      "description": ""
+    },
+    {
+      "start": "19:20",
+      "end": "19:35",
+      "genre": "Info",
+      "title": "19:35",
+      "description": ""
+    },
+    {
+      "start": "19:35",
+      "end": "20:10",
+      "genre": "Show",
+      "title": "20:10",
+      "description": ""
+    },
+    {
+      "start": "20:10",
+      "end": "20:15",
+      "genre": "Info",
+      "title": "20:15",
+      "description": ""
+    },
+    {
+      "start": "20:15",
+      "end": "21:15",
+      "genre": "Serie",
+      "title": "21:15",
+      "description": ""
+    },
+    {
+      "start": "21:15",
+      "end": "22:15",
+      "genre": "Serie",
+      "title": "22:15",
+      "description": ""
+    },
+    {
+      "start": "22:15",
+      "end": "00:35",
+      "genre": "Film",
+      "title": "00:35",
+      "description": ""
+    },
+    {
+      "start": "00:35",
+      "end": "01:25",
+      "genre": "Serie",
+      "title": "01:25",
+      "description": ""
+    },
+    {
+      "start": "01:25",
+      "end": "02:10",
+      "genre": "Serie",
+      "title": "02:10",
+      "description": ""
+    },
+    {
+      "start": "02:10",
+      "end": "04:10",
+      "genre": "Film",
+      "title": "04:10",
+      "description": ""
+    },
+    {
+      "start": "04:10",
+      "end": "04:35",
+      "genre": "",
+      "title": "BilderWelten",
+      "description": ""
+    },
+    {
+      "start": "04:35",
+      "end": "05:25",
+      "genre": "Show",
+      "title": "05:25",
+      "description": ""
+    },
+    {
+      "start": "05:25",
+      "end": "05:55",
+      "genre": "Show",
+      "title": "05:55",
+      "description": ""
+    },
+    {
+      "start": "05:55",
+      "end": "06:00",
+      "genre": "Info",
+      "title": "06:00",
+      "description": ""
+    }
+  ]
+}
