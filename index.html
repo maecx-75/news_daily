@@ -650,6 +650,218 @@ window.addEventListener("keydown",function(e){
 
 initLikes();
 loadTvProgram();
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let runner, obstacles, cans, score, best, running, gravity, speed;
+
+function resetGame(){
+  runner = {x:80,y:105,w:38,h:48,vy:0,jump:false};
+  obstacles = [];
+  cans = [];
+  score = 0;
+  best = Number(localStorage.getItem("energyBest") || 0);
+  gravity = 0.8;
+  speed = 4;
+  running = false;
+  document.getElementById("score").textContent = score;
+  document.getElementById("best").textContent = best;
+  drawGame();
+}
+
+function startGame(){
+  if(!running){
+    running = true;
+    requestAnimationFrame(loop);
+  }
+}
+
+function restartGame(){
+  resetGame();
+  startGame();
+}
+
+function jump(){
+  if(!runner.jump){
+    runner.vy = -13;
+    runner.jump = true;
+  }
+}
+
+function drawBackground(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle = "#8fd2ff";
+  ctx.fillRect(0,0,canvas.width,95);
+
+  ctx.fillStyle = "#ffffff";
+  for(let i=0;i<7;i++){
+    ctx.beginPath();
+    ctx.arc(160+i*170,35+(i%2)*18,18,0,Math.PI*2);
+    ctx.arc(185+i*170,35+(i%2)*18,26,0,Math.PI*2);
+    ctx.arc(215+i*170,35+(i%2)*18,16,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "#435f78";
+  ctx.beginPath();
+  ctx.moveTo(0,95);
+  ctx.lineTo(130,35);
+  ctx.lineTo(260,95);
+  ctx.lineTo(380,45);
+  ctx.lineTo(540,95);
+  ctx.lineTo(720,40);
+  ctx.lineTo(900,95);
+  ctx.lineTo(1070,50);
+  ctx.lineTo(1200,95);
+  ctx.fill();
+
+  ctx.fillStyle = "#2d2d2d";
+  ctx.fillRect(0,96,canvas.width,74);
+
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 3;
+  ctx.setLineDash([24,18]);
+  ctx.beginPath();
+  ctx.moveTo(0,135);
+  ctx.lineTo(canvas.width,135);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawRunner(){
+  ctx.fillStyle = "#111";
+  ctx.fillRect(runner.x+10,runner.y+10,20,28);
+
+  ctx.fillStyle = "#f4c28b";
+  ctx.beginPath();
+  ctx.arc(runner.x+20,runner.y,13,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#d51b2b";
+  ctx.fillRect(runner.x+5,runner.y+6,30,8);
+
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(runner.x+14,runner.y+38);
+  ctx.lineTo(runner.x+2,runner.y+52);
+  ctx.moveTo(runner.x+25,runner.y+38);
+  ctx.lineTo(runner.x+42,runner.y+52);
+  ctx.stroke();
+}
+
+function drawObstacle(o){
+  ctx.fillStyle = o.type === "rock" ? "#3d3d3d" : "#e33";
+  ctx.fillRect(o.x,o.y,o.w,o.h);
+
+  if(o.type === "barrier"){
+    ctx.fillStyle = "#fff";
+    for(let i=0;i<o.w;i+=18){
+      ctx.fillRect(o.x+i,o.y+6,10,o.h-12);
+    }
+  }
+}
+
+function drawCan(c){
+  ctx.fillStyle = "#1444ff";
+  ctx.fillRect(c.x,c.y,20,42);
+  ctx.fillStyle = "#ff1b1b";
+  ctx.fillRect(c.x+4,c.y+8,12,24);
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(c.x+7,c.y+2,6,4);
+}
+
+function collision(a,b){
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+
+function loop(){
+  if(!running) return;
+
+  drawBackground();
+
+  runner.y += runner.vy;
+  runner.vy += gravity;
+
+  if(runner.y >= 105){
+    runner.y = 105;
+    runner.vy = 0;
+    runner.jump = false;
+  }
+
+  if(Math.random() < 0.018){
+    obstacles.push({
+      x:canvas.width,
+      y:118,
+      w:55,
+      h:32,
+      type:Math.random() > .5 ? "rock" : "barrier"
+    });
+  }
+
+  if(Math.random() < 0.025){
+    cans.push({x:canvas.width,y:85,w:20,h:42});
+  }
+
+  obstacles.forEach(o => o.x -= speed);
+  cans.forEach(c => c.x -= speed);
+
+  obstacles = obstacles.filter(o => o.x > -80);
+  cans = cans.filter(c => c.x > -50);
+
+  obstacles.forEach(o=>{
+    drawObstacle(o);
+    if(collision(runner,o)){
+      running = false;
+      best = Math.max(best,score);
+      localStorage.setItem("energyBest",best);
+      document.getElementById("best").textContent = best;
+    }
+  });
+
+  cans.forEach((c,i)=>{
+    drawCan(c);
+    if(collision(runner,c)){
+      score += 10;
+      cans.splice(i,1);
+    }
+  });
+
+  score++;
+  speed += 0.002;
+
+  document.getElementById("score").textContent = score;
+
+  drawRunner();
+
+  if(running) requestAnimationFrame(loop);
+}
+
+function drawGame(){
+  drawBackground();
+  drawRunner();
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.code === "Space"){
+    e.preventDefault();
+    jump();
+    startGame();
+  }
+});
+
+canvas.addEventListener("click",()=>{
+  jump();
+  startGame();
+});
+
+canvas.addEventListener("touchstart",()=>{
+  jump();
+  startGame();
+});
+
+resetGame();
 </script>
 
 </body>
