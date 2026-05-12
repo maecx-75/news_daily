@@ -109,6 +109,11 @@ def main():
 
         try:
             title, desc, meta_image, text = get_episode_meta(page_url)
+            print("PRÜFE ID:", candidate["id"])
+            print("URL:", page_url)
+            print("TITLE:", title)
+            print("DESC:", desc)
+            print("---")
         except Exception:
             continue
 
