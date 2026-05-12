@@ -1,15 +1,14 @@
-import json
+iimport json
+import re
 from pathlib import Path
 
 import requests
+from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
 
-API_KEY = "AIzaSyCABRNljVUEN_TP7zJrUzzpLGyf9M0H7Pc"
-CX = "721b47015e9f54c93"
-
-SEARCH_URL = "https://www.googleapis.com/customsearch/v1"
+URL = "https://www.servustv.com/de/nachrichten"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
@@ -20,88 +19,94 @@ def clean(text):
     return " ".join((text or "").split()).strip()
 
 
-def search_latest_news90():
-    params = {
-        "key": API_KEY,
-        "cx": CX,
-        "q": "Servus Nachrichten in 90 Sekunden",
-        "num": 10,
-        "sort": "date"
-    }
+def get_meta(soup, key):
+    tag = soup.find("meta", attrs={"property": key})
+    if not tag:
+        tag = soup.find("meta", attrs={"name": key})
 
-    r = requests.get(SEARCH_URL, params=params, headers=HEADERS, timeout=30)
-    data = r.json()
-
-    items = data.get("items", [])
-
-    if not items:
-        raise RuntimeError("Keine Google-Ergebnisse gefunden.")
-
-    for item in items:
-        title = clean(item.get("title", ""))
-        link = item.get("link", "")
-        snippet = clean(item.get("snippet", ""))
-
-        lower = f"{title} {snippet}".lower()
-
-        if (
-            "90 sekunden" in lower
-            and "servustv.com" in link
-        ):
-            return {
-                "title": title,
-                "url": link,
-                "snippet": snippet
-            }
-
-    raise RuntimeError("Keine passende 90-Sekunden-Folge gefunden.")
+    return clean(tag.get("content", "")) if tag else ""
 
 
-def get_meta(url):
+def find_latest_news90():
+
+    html = requests.get(URL, headers=HEADERS, timeout=30).text
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    links = []
+
+    for a in soup.find_all("a", href=True):
+
+        href = a["href"]
+
+        text = clean(a.get_text(" ", strip=True))
+
+        combined = f"{text} {href}".lower()
+
+        if "90-sekunden" in combined or "90 sekunden" in combined:
+
+            if href.startswith("/"):
+                href = "https://www.servustv.com" + href
+
+            if href not in links:
+                links.append(href)
+
+    print("GEFUNDENE LINKS:", len(links))
+
+    if not links:
+        raise RuntimeError("Keine 90-Sekunden-Links gefunden.")
+
+    return links[0]
+
+
+def get_episode_data(url):
+
     html = requests.get(url, headers=HEADERS, timeout=30).text
 
-    image = ""
+    soup = BeautifulSoup(html, "html.parser")
 
-    og_image = 'property="og:image" content="'
+    title = (
+        get_meta(soup, "og:title")
+        or clean(soup.title.text)
+    )
 
-    if og_image in html:
-        image = html.split(og_image)[1].split('"')[0]
+    desc = get_meta(soup, "og:description")
 
-    return image
+    image = get_meta(soup, "og:image")
+
+    return {
+        "title": title,
+        "url": url,
+        "image": image,
+        "description": desc
+    }
 
 
 def main():
-    old = {}
 
-    if JSON_PATH.exists():
-        try:
-            old = json.loads(JSON_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            old = {}
+    latest_url = find_latest_news90()
 
-    latest = search_latest_news90()
+    print("NEUESTE FOLGE:", latest_url)
 
-    image = get_meta(latest["url"])
+    data = get_episode_data(latest_url)
 
-    title = latest["title"]
-
-    ticker = title.replace(" - Aktuelle Folge", "")
+    ticker = data["title"]
 
     result = {
-        "title": title,
-        "short_title": title,
-        "full_title": title,
+        "title": data["title"],
+        "short_title": data["title"],
+        "full_title": data["title"],
 
-        "url": latest["url"],
-        "href": latest["url"],
+        "url": data["url"],
+        "href": data["url"],
 
-        "image": image,
-        "thumbnail": image,
+        "image": data["image"],
+        "thumbnail": data["image"],
 
-        "news90_title": title,
-        "news90_link": latest["url"],
-        "news90_image": image,
-        "news90_thumbnail": image,
+        "news90_title": data["title"],
+        "news90_link": data["url"],
+        "news90_image": data["image"],
+        "news90_thumbnail": data["image"],
 
         "topics": [ticker],
 
@@ -109,8 +114,16 @@ def main():
         "ticker90": ticker,
         "topmeldung90": ticker,
 
-        "description": latest["snippet"]
+        "description": data["description"]
     }
+
+    old = {}
+
+    if JSON_PATH.exists():
+        try:
+            old = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+        except:
+            pass
 
     if "google_headlines" in old:
         result["google_headlines"] = old["google_headlines"]
@@ -120,10 +133,8 @@ def main():
         encoding="utf-8"
     )
 
-    print("AKTUELLE 90-SEKUNDEN-FOLGE:")
-    print(title)
-    print(latest["url"])
-    print(image)
+    print("AKTUALISIERT:")
+    print(data["title"])
 
 
 if __name__ == "__main__":
