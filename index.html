@@ -196,15 +196,30 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     </div>
   </a>
 
-  <a class="tile small" href="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" target="_blank" data-share-url="https://www.servustv.com/tv-programm/pn0b1ec15b2fe10/" style="background-image:url('SERVUSTV_programm.jpg')">
+ <div class="tile small"
+     onclick="openTvProgram()"
+     style="background-image:url('SERVUSTV_programm.jpg');cursor:pointer;">
+
     <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-tv" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
+      <button class="action-btn like-btn"
+              data-like-key="tile-tv"
+              onclick="toggleLike(event, this)">
+              ♡ Like
+      </button>
+
+      <button class="action-btn"
+              onclick="event.stopPropagation();openTvProgram();">
+              📺 Öffnen
+      </button>
     </div>
+
     <div class="overlay">
       <h2>TV Programm</h2>
+      <div class="sub" id="tv-now">
+        Lade aktuelles Programm …
+      </div>
     </div>
-  </a>
+</div>
 
   <a class="tile small" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" data-share-url="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
     <div class="tile-actions">
