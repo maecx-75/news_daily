@@ -505,7 +505,92 @@ async function shareTile(event, tile){
 }
 
 initLikes();
+async function loadTvProgram(){
+
+  try{
+
+    const res = await fetch("tv_program.json?ts=" + Date.now(),{
+      cache:"no-store"
+    });
+
+    const data = await res.json();
+
+    const list = document.getElementById("tvProgramList");
+    const nowBox = document.getElementById("tv-now");
+
+    if(!list) return;
+
+    list.innerHTML = "";
+
+    if(data.program && data.program.length){
+
+      nowBox.textContent =
+        data.program[0].start + " • " + data.program[0].title;
+
+      data.program.forEach(item=>{
+
+        const div = document.createElement("div");
+
+        div.className = "program-item";
+
+        div.innerHTML = `
+          <div class="program-time">
+            ${item.start} – ${item.end}
+          </div>
+
+          <div class="program-title">
+            ${item.title}
+          </div>
+
+          <div class="program-genre">
+            ${item.genre || ""}
+          </div>
+        `;
+
+        list.appendChild(div);
+      });
+
+    }
+
+  }catch(e){
+    console.log("TV Programm Fehler:",e);
+  }
+}
+
+function openTvProgram(){
+  document.getElementById("tvModal").style.display = "block";
+  loadTvProgram();
+}
+
+function closeTvProgram(){
+  document.getElementById("tvModal").style.display = "none";
+}
+
+loadTvProgram();
+
+initLikes();
 </script>
+
+<div class="tv-modal" id="tvModal">
+
+  <div class="tv-modal-content">
+
+    <button class="close-btn"
+            onclick="closeTvProgram()">
+            ×
+    </button>
+
+    <h2 style="margin-bottom:24px;">
+      ServusTV Programm heute
+    </h2>
+
+    <div id="tvProgramList">
+
+    </div>
+
+  </div>
+
+</div>
 
 </body>
 </html>
