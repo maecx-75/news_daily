@@ -19,12 +19,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - run: pip install requests beautifulsoup4 playwright
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 playwright yt-dlp ytdlp-servustv
 
-      - run: python -m playwright install chromium
+      - name: Install Playwright browser
+        run: python -m playwright install chromium
 
-      # News90 vorübergehend deaktiviert
-      # - run: python scripts/update_news90.py
+      - name: Update News 90
+        run: python scripts/update_news90.py
 
       - run: python scripts/update_news1920.py
       - run: python scripts/update_google_headlines.py
