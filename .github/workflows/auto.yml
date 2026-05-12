@@ -27,6 +27,7 @@ jobs:
       - run: python scripts/update_news1920.py
       - run: python scripts/update_google_headlines.py
       - run: python scripts/update_weather90.py
+      - run: python scripts/update_tv_program.py
 
       - run: |
           git config user.name "bot"
