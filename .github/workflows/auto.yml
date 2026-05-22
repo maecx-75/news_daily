@@ -2,7 +2,6 @@ name: Auto Update
 
 on:
   schedule:
-    # Läuft weiterhin mehrmals pro Stunde
     - cron: "2,12,27,42,47,57 * * * *"
   workflow_dispatch:
 
@@ -21,21 +20,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          # Cache für Pip aktivieren, um die Installation drastisch zu beschleunigen
-          cache: 'pip'
+          # Cache wurde entfernt, damit es ohne requirements.txt fehlerfrei läuft
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install requests beautifulsoup4 playwright yt-dlp ytdlp-servustv
 
-      # Falls Ihre anderen Skripte (z. B. Wetter oder TV-Programm) noch Playwright brauchen,
-      # installieren wir hier NUR den absolut notwendigen Chromium-Browser ohne Extras (--with-deps)
       - name: Install Playwright browser
         run: python -m playwright install chromium --with-deps
 
-      # Wir nutzen "continue-on-error: true", damit ein Fehler in einem Skript 
-      # nicht die nachfolgenden Updates (z.B. Wetter) komplett blockiert.
+       Tar-Skripte nacheinander ausführen (Fehler fangen)
       - name: Update News 90 (API Version)
         run: python scripts/update_news90.py
         continue-on-error: true
@@ -56,7 +51,6 @@ jobs:
         run: python scripts/update_tv_program.py
         continue-on-error: true
 
-      # Der finale Push sichert alle erfolgreich aktualisierten JSON-Dateien
       - name: Commit and Push changes
         run: |
           git config user.name "bot"
