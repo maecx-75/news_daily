@@ -2,11 +2,9 @@ name: Auto Update
 
 on:
   schedule:
-    - cron: "2,12,27,42,47,57 * * * *"
-  workflow_dispatch:
-
-permissions:
-  contents: write
+    # Triggert den Workflow mehrmals täglich (Beispiel: alle 3 Stunden)
+    - cron: '0 */3 * * *'
+  workflow_dispatch: # Ermöglicht das manuelle Starten über den GitHub-Actions-Tab
 
 jobs:
   update:
@@ -15,44 +13,26 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.x'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          pip install --upgrade pip
-          pip install requests beautifulsoup4 playwright yt-dlp ytdlp-servustv
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
 
-      - name: Install Playwright browser
-        run: python -m playwright install chromium --with-deps
-
-      - name: Update News 90 (API Version)
+      - name: Run Update News 90
         run: python scripts/update_news90.py
-        continue-on-error: true
 
-      - name: Update News 1920
-        run: python scripts/update_news1920.py
-        continue-on-error: true
-
-      - name: Update Google Headlines
-        run: python scripts/update_google_headlines.py
-        continue-on-error: true
-
-      - name: Update Weather 90
-        run: python scripts/update_weather90.py
-        continue-on-error: true
-
-      - name: Update TV Program
-        run: python scripts/update_tv_program.py
-        continue-on-error: true
-
+      # HIER IST DER REPARIERTE PUSH-SCHRITT MIT REBASE
       - name: Commit and Push changes
         run: |
-          git config user.name "bot"
-          git config user.email "bot@github.com"
-          git add .
-          git commit -m "auto update (news, weather & program)" || exit 0
-          git push
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add headlines.json news1920.json weather90.json tv_program.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "auto update (news, weather & program)" && git pull --rebase origin main && git push origin main)
