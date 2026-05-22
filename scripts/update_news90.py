@@ -1,103 +1,86 @@
-import json
 import requests
+from bs4 import BeautifulSoup
+import json
+import os
+import re
 
-def fetch_latest_news90():
-    print("Starte präzise API-Abfrage für 'Servus Nachrichten in 90 Sekunden'...")
-    
-    # Wir erhöhen das Limit auf 15, um genügend Auswahl zu haben, falls ältere Clips oben liegen
-    api_url = "https://www.servustv.com/api/v1/contents/series/AA-1Z7U71WNW1W111/assets?limit=15&order=desc"
+def get_latest_news90():
+    # Die von dir bereitgestellte Übersichtsseite für die 90-Sekunden-Nachrichten
+    url = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
     }
-    
-    try:
-        response = requests.get(api_url, headers=headers, timeout=15)
-        response.raise_for_status()
-        data = response.json()
-        
-        assets = data.get("items", [])
-        if not assets:
-            print("Keine Videos in der API gefunden.")
-            return None
-            
-        latest_video = None
-        
-        # Signalsuche: Wir gehen die Liste von oben nach unten durch
-        for item in assets:
-            title = item.get("title", "")
-            description = item.get("description", "")
-            
-            # Filter: Wenn 'Wegscheider' oder 'Wochenkommentar' im Titel vorkommt, überspringen wir das Video!
-            if "wegscheider" in title.lower() or "wochenkommentar" in title.lower():
-                print(f"Überspringe unerwünschten Inhalt: {title}")
-                continue
-                
-            # Wir wollen nur Videos, die das Trennzeichen '|' enthalten (Anzeichen für die 3 Ticker-Themen)
-            # ODER explizit ein News-Update sind
-            if "|" in title or "nachrichten" in title.lower():
-                latest_video = item
-                break
-        
-        # Fallback: Falls gar kein Filter matcht, nehmen wir zähneknirschend das erste Element
-        if not latest_video:
-            print("Kein passendes News-Video per Filter gefunden. Nutze Fallback.")
-            latest_video = assets[0]
-            
-        # 1. Link zusammenbauen
-        relative_url = latest_video.get("url", "")
-        video_link = f"https://www.servustv.com{relative_url}" if not relative_url.startswith("http") else relative_url
-            
-        # 2. Titel splitten für Kachel & Ticker
-        raw_title = latest_video.get("title", "Servus Nachrichten in 90 Sekunden")
-        print(f"Gewähltes Video: {raw_title}")
-        
-        themes = [t.strip() for t in raw_title.split("|") if t.strip()]
-        
-        if len(themes) >= 1:
-            headline = themes[0]
-        else:
-            headline = "Servus Nachrichten in 90 Sekunden"
-            
-        while len(themes) < 3:
-            themes.append(headline)
-            
-        ticker_text = f"{themes[0]} | {themes[1]} | {themes[2]}"
-        
-        # 3. Bildadresse ermitteln
-        image_url = "news90.png"
-        images = latest_video.get("images", {})
-        for img_key in ['landscape', 'preview', 'fallback']:
-            if img_key in images and images[img_key].get("url"):
-                image_url = images[img_key]["url"]
-                break
-        
-        return {
-            "news90_link": video_link,
-            "news90_title": headline,
-            "ticker90": ticker_text,
-            "news90_image": image_url
-        }
-        
-    except Exception as e:
-        print(f"Fehler bei API-Abfrage: {e}")
-        return None
 
-def merge_and_save(new_data):
-    if not new_data:
-        return
     try:
-        with open("headlines.json", "r", encoding="utf-8") as f:
-            existing_data = json.load(f)
-    except Exception:
-        existing_data = {}
+        print(f"Lade Übersichtsseite: {url}")
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
         
-    existing_data.update(new_data)
-    
-    with open("headlines.json", "w", encoding="utf-8") as f:
-        json.dump(existing_data, f, ensure_ascii=False, indent=2)
-    print("headlines.json erfolgreich aktualisiert!")
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Array für alle gefundenen Video-Links mit dem ServusTV-Muster
+        video_links = []
+        
+        # Wir suchen nach allen Links, die eine Content-ID enthalten
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            # ServusTV Video-IDs folgen meist dem Muster AA-XXXXXXXXXXXXX oder ähnlichen Hashes
+            if "/de/page/AA-" in href or "/de/videos/aa-" in href.lower():
+                # Verhindern, dass die Übersichtsseite selbst als "neues Video" genommen wird
+                if "AA-1Y5RJCD1H2111" not in href:
+                    video_links.append(href)
+        
+        if not video_links:
+            print("Keine dynamischen Video-Links im HTML gefunden. Versuche Fallback über reguläre Ausdrücke...")
+            # Fallback: Suche im gesamten Seitenquelltext nach Video-Pfaden (oft in JSON-Scripts auf der Seite)
+            found_ids = re.findall(r'/de/[a-z]+/aa-[a-z0-9]+', response.text, re.IGNORECASE)
+            for f_id in found_ids:
+                if "AA-1Y5RJCD1H2111" not in f_id.upper():
+                    video_links.append(f_id)
+
+        if not video_links:
+            print("Kritischer Fehler: Es konnte kein aktueller Video-Link extrahiert werden.")
+            return
+
+        # Da ServusTV die Videos chronologisch von links nach rechts listet,
+        # ist das ERSTE gefundene Video im Quelltext die aktuellste Sendung.
+        latest_path = video_links[0]
+        
+        # Absolute URL aufbauen
+        if latest_path.startswith("/"):
+            full_video_url = f"https://www.servustv.com{latest_path}"
+        else:
+            full_video_url = latest_path
+
+        print(f"Erfolgreich aktuellste Sendung gefunden: {full_video_url}")
+
+        # headlines.json laden oder neu erstellen
+        json_path = "headlines.json"
+        if os.path.exists(json_path):
+            with open(json_path, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = {}
+        else:
+            data = {}
+
+        # Werte für das Frontend aktualisieren
+        data["news90_link"] = full_video_url
+        data["news90_title"] = "Servus Nachrichten in 90 Sekunden"
+        # Standard-Hintergrundbild setzen, falls das Skript kein dynamisches Thumbnail parst
+        data["news90_image"] = "https://s.servustv.com/v/img/news90_default.png" 
+
+        # Datei sauber mit Einrückung zurückschreiben
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            
+        print("headlines.json wurde erfolgreich aktualisiert.")
+
+    except Exception as e:
+        print(f"Fehler während der Ausführung des Skripts: {e}")
 
 if __name__ == "__main__":
-    news_data = fetch_latest_news90()
-    merge_and_save(news_data)
+    get_latest_news90()
