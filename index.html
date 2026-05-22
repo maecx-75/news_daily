@@ -22,71 +22,129 @@
             margin: 0;
             font-size: 2.5rem;
         }
-        .ticker-container {
+        .header p {
+            margin: 5px 0 0 0;
+            color: #ccc;
+        }
+        .meta-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .time-box, .location-box, .sun-box, .update-btn {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .update-btn {
+            background: #444;
+            cursor: pointer;
+            border: none;
+            color: white;
+        }
+        .ticker-bar {
             background-color: #1a1a1a;
             padding: 10px;
-            overflow: hidden;
-            white-space: nowrap;
-            border-bottom: 3px solid #b30000;
+            border-bottom: 2px solid #b30000;
+            display: flex;
         }
-        .ticker-text {
-            display: inline-block;
-            padding-left: 100%;
-            animation: ticker 25s linear infinite;
+        .ticker-label {
+            background: #b30000;
+            padding: 0 10px;
             font-weight: bold;
-            color: #ffcccc;
+            margin-right: 10px;
         }
-        @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
+        .ticker-content {
+            flex-grow: 1;
+            color: #ddd;
         }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             padding: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: auto;
+        }
+        @media (max-width: 900px) {
+            .grid-container { grid-template-columns: 1fr; }
         }
         .card {
             background-color: #1c1c1c;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: transform 0.3s;
+            position: relative;
             text-decoration: none;
             color: white;
             display: flex;
             flex-direction: column;
         }
-        .card:hover {
-            transform: scale(1.02);
-        }
         .card-img-container {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            padding-top: 56.25%;
         }
         .card img {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
         }
         .card-content {
             padding: 15px;
-            flex-grow: 1;
         }
         .card h3 {
-            margin: 0 0 10px 0;
+            margin: 0 0 5px 0;
             font-size: 1.2rem;
         }
         .card p {
             margin: 0;
-            color: #aaaaaa;
+            color: #999;
+            font-size: 0.85rem;
+        }
+        .action-btns {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+        .btn {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #444;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        /* Spezifisches Layout für TV Programm Kachel */
+        .tv-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
+        .tv-grid img {
+            width: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        /* Spezifisches Layout für Google Headlines */
+        .headlines-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
             font-size: 0.9rem;
+        }
+        .headlines-list li {
+            margin-bottom: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
         }
     </style>
 </head>
@@ -95,48 +153,136 @@
     <div class="header">
         <h1>Das Wichtigste des Tages</h1>
         <p>Die Top Nachrichten und das Wetter für Österreich</p>
+        <div class="meta-info">
+            <div class="time-box">18:31</div>
+            <div class="location-box">Salzburg</div>
+            <div class="sun-box">🌅 05:21</div>
+            <div class="sun-box">🌇 20:47</div>
+            <button class="update-btn">🔄 Update: 18:31</button>
+        </div>
     </div>
 
-    <div class="ticker-container">
-        <div id="ticker" class="ticker-text">Lade aktuelle Schlagzeilen...</div>
+    <div class="ticker-bar">
+        <div class="ticker-label">Topmeldungen 90 Sekunden:</div>
+        <div id="ticker-text" class="ticker-content">Wochenkommentar von Ferdinand Wegscheider | 09.05.</div>
     </div>
 
     <div class="grid-container">
-        <a id="news90_link" href="#" class="card" target="_blank">
+        
+        <a id="news90_link" href="https://www.servustv.com/de/page/AA-1Y5RJCD1H2111" class="card" target="_blank">
+            <div class="action-btns">
+                <button class="btn">♡ Like</button>
+                <button class="btn">↗ Teilen</button>
+            </div>
             <div class="card-img-container">
                 <img id="news90_img" src="news90.png" alt="Servus Nachrichten">
             </div>
             <div class="card-content">
-                <h3 id="news90_title">Lade aktuelle Sendung...</h3>
+                <h3 id="news90_title">Servus Nachrichten in 90 Sekunden</h3>
                 <p>Servus Nachrichten in 90 Sekunden</p>
             </div>
         </a>
 
+        <a id="news1920_link" href="#" class="card" target="_blank">
+            <div class="action-btns">
+                <button class="btn">♡ Like</button>
+                <button class="btn">↗ Teilen</button>
+            </div>
+            <div class="card-img-container">
+                <img src="news1920.png" alt="Servus Nachrichten">
+            </div>
+            <div class="card-content">
+                <h3 id="news1920_title">• Keine Headlines verfügbar</h3>
+                <p>Servus Nachrichten</p>
+            </div>
+        </a>
+
+        <a id="weather_link" href="#" class="card" target="_blank">
+            <div class="action-btns">
+                <button class="btn">♡ Like</button>
+                <button class="btn">↗ Teilen</button>
+            </div>
+            <div class="card-img-container">
+                <img src="https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=500&q=80" alt="Wetter">
+            </div>
+            <div class="card-content">
+                <h3 id="weather_title">Neuester Titel nicht verfügbar.</h3>
+                <p>Wetter in 90 Sekunden</p>
+            </div>
+        </a>
+
+        <div class="card">
+            <div class="action-btns">
+                <button class="btn">♡ Like</button>
+                <button class="btn">📂 Öffnen</button>
+            </div>
+            <div class="tv-grid">
+                <img src="SERVUSTV_programm.jpg" alt="Prog 1">
+                <img src="https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&w=150&q=80" alt="Prog 2">
+                <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=150&q=80" alt="Prog 3">
+                <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=150&q=80" alt="Prog 4">
+                <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=150&q=80" alt="Prog 5">
+                <img src="https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=150&q=80" alt="Prog 6">
+            </div>
+            <div class="card-content">
+                <h3>TV Programm</h3>
+            </div>
         </div>
 
+        <div class="card">
+            <div class="action-btns">
+                <button class="btn">♡ Like</button>
+                <button class="btn">↗ Teilen</button>
+            </div>
+            <div class="card-content">
+                <p style="text-transform: uppercase; color: #b30000; font-weight: bold; margin-bottom: 5px;">Top Schlagzeilen</p>
+                <ul class="headlines-list" id="google-headlines">
+                    <li>• Milliarden-Kürzung: Schließung von Studienrichtungen laut Uni-Rektor "möglich" - Kurier</li>
+                    <li>• „Wettlauf gegen die Zeit“: WHO meldet 750 Ebola-Verdachtsfälle und 177 Tote - DiePresse.com</li>
+                    <li>• „Ein souveräner ORF“: Markus Breitenecker bewirbt sich als ORF-Generaldirektor - OTS.at</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="action-btns">
+                <button class="btn">♡ Like</button>
+                <button class="btn">↗ Teilen</button>
+            </div>
+            <div class="card-img-container">
+                <img src="https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=500&q=80" alt="Live">
+                <span style="position: absolute; bottom: 10px; left: 10px; background: red; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">● LIVE</span>
+            </div>
+        </div>
+
+    </div>
+
     <script>
-        // Daten aus der headlines.json live ins Frontend laden
+        // JS block um die JSON Files sauber in deine Kacheln zu mappen
         fetch('headlines.json?t=' + new Date().getTime())
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
-                if(data.news90_link) {
-                    document.getElementById('news90_link').href = data.news90_link;
-                }
+                if(data.news90_link) document.getElementById('news90_link').href = data.news90_link;
                 if(data.news90_title) {
                     document.getElementById('news90_title').innerText = data.news90_title;
+                    document.getElementById('ticker-text').innerText = data.news90_title;
                 }
-                if(data.news90_image) {
-                    document.getElementById('news90_img').src = data.news90_image;
-                }
-                if(data.ticker90) {
-                    document.getElementById('ticker').innerText = data.ticker90;
-                }
-            })
-            .catch(error => {
-                print("[FEHLER] JSON konnte nicht geladen werden:", error);
-                document.getElementById('news90_title').innerText = "Nachrichten temporär nicht verfügbar";
-            });
-    </script>
+                if(data.news90_image) document.getElementById('news90_img').src = data.news90_image;
+            }).catch(e => console.log("Fehler bei headlines.json"));
 
+        fetch('news1920.json?t=' + new Date().getTime())
+            .then(res => res.json())
+            .then(data => {
+                if(data.news1920_link) document.getElementById('news1920_link').href = data.news1920_link;
+                if(data.news1920_title) document.getElementById('news1920_title').innerText = data.news1920_title;
+            }).catch(e => console.log("Fehler bei news1920.json"));
+
+        fetch('weather90.json?t=' + new Date().getTime())
+            .then(res => res.json())
+            .then(data => {
+                if(data.weather_link) document.getElementById('weather_link').href = data.weather_link;
+                if(data.weather_title) document.getElementById('weather_title').innerText = data.weather_title;
+            }).catch(e => console.log("Fehler bei weather90.json"));
+    </script>
 </body>
 </html>
