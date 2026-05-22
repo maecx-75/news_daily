@@ -158,7 +158,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
 <header class="topbar">
   <div class="logo">
-    <img src="servustv-on-logo.png" alt="ServusTV On Logo">
+    <img src="logo.png" alt="ServusTV On Logo">
   </div>
 
   <div class="headline">
@@ -202,7 +202,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     </div>
     <div class="overlay">
       <h2 id="news90Headline">Lade Headline …</h2>
-      <div class="sub" id="news90Subline">Nachrichten in 90 Sekunden</div>
+      <div class="sub" id="news90Subline">Servus Nachrichten in 90 Sekunden</div>
     </div>
   </a>
 
@@ -306,19 +306,19 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
 <div class="toast" id="toast">Link kopiert</div>
 
-<div class="tv-modal" id="tvModal">
-  <div class="tv-modal-content">
-    <div class="tv-modal-header">
+<div class="tv-modal" id="tvModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; overflow-y:auto; padding:40px 20px;">
+  <div class="tv-modal-content" style="max-width:800px; margin:0 auto; background:#111; border:1px solid #333; border-radius:12px; padding:20px;">
+    <div class="tv-modal-header" style="display:flex; justify-content:between; align-items:center; margin-bottom:20px; border-bottom:1px solid #222; padding-bottom:10px;">
       <h2>ServusTV heute</h2>
-      <button class="close-btn" onclick="closeTvProgram()">×</button>
+      <button class="close-btn" onclick="closeTvProgram()" style="background:none; border:none; color:#fff; font-size:32px; cursor:pointer;">&times;</button>
     </div>
 
-    <table class="tv-program-table">
+    <table class="tv-program-table" style="width:100%; border-collapse:collapse; color:#fff; text-align:left;">
       <thead>
-        <tr>
-          <th>Sender</th>
-          <th>Zeit</th>
-          <th>Titel</th>
+        <tr style="border-bottom:2px solid #var(--red);">
+          <th style="padding:10px;">Sender</th>
+          <th style="padding:10px;">Zeit</th>
+          <th style="padding:10px;">Titel</th>
         </tr>
       </thead>
       <tbody id="tvProgramList"></tbody>
@@ -380,38 +380,27 @@ async function loadHeadlines(){
     document.getElementById("lastUpdate").textContent =
       "🔄 Update: " + new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
 
-    const tickerText =
-      data.ticker90 ||
-      data.topmeldung90 ||
-      data.ticker ||
-      data.news90_ticker ||
-      "Keine Topmeldung eingetragen.";
-
+    // 1. Newsticker befüllen (Verwendet den präzisen Ticker-String)
+    const tickerText = data.ticker90 || "Keine Topmeldung eingetragen.";
     document.getElementById("bannerText").textContent = tickerText;
 
+    // 2. Kachel Links Oben: Link & Share-URL einbinden
     const news90Tile = document.getElementById("news90Tile");
-    const news90Url =
-      data.news90_link ||
-      data.news90_url ||
-      data.url ||
-      data.href ||
-      "#";
-
+    const news90Url = data.news90_link || "#";
     if(news90Tile){
       news90Tile.href = news90Url;
       news90Tile.dataset.shareUrl = news90Url;
     }
 
-    const news90Headline = document.getElementById("news90Headline");
-    const news90Title =
-      data.news90_title ||
-      data.short_title ||
-      data.title ||
-      data.full_title ||
-      "Neuester Titel nicht verfügbar.";
+    // 3. Kachel Links Oben: Bild dynamisch übergeben
+    if(data.news90_image && news90Tile){
+      news90Tile.style.backgroundImage = `url('${data.news90_image}')`;
+    }
 
+    // 4. Kachel Links Oben: Saubere Headline direkt einsetzen
+    const news90Headline = document.getElementById("news90Headline");
     if(news90Headline){
-      news90Headline.textContent = news90Title.split("|")[0].trim();
+      news90Headline.textContent = data.news90_title || "Servus Nachrichten in 90 Sekunden";
     }
 
     const news1920Tile = document.getElementById("news1920Tile");
@@ -559,17 +548,17 @@ async function loadTvProgram(){
         const tr = document.createElement("tr");
         tr.className = item.is_now ? "program-now" : "";
         tr.innerHTML = `
-          <td>
-            <span class="program-sender">ServusTV</span><br>
-            <span class="program-type">${item.genre || ""}</span>
+          <td style="padding:10px; border-bottom:1px solid #222;">
+            <span class="program-sender" style="color:var(--red); font-weight:bold;">ServusTV</span><br>
+            <span class="program-type" style="font-size:12px; opacity:0.6;">${item.genre || ""}</span>
           </td>
-          <td>
-            <div class="program-time">${item.start}</div>
-            <div class="program-duration">${item.end || ""}</div>
+          <td style="padding:10px; border-bottom:1px solid #222;">
+            <div class="program-time" style="font-weight:bold;">${item.start}</div>
+            <div class="program-duration" style="font-size:12px; opacity:0.6;">${item.end || ""}</div>
           </td>
-          <td>
-            <div class="program-title">${item.title || ""}</div>
-            <div class="program-desc">${item.description || ""}</div>
+          <td style="padding:10px; border-bottom:1px solid #222;">
+            <div class="program-title" style="font-weight:bold; color:#fff;">${item.title || ""}</div>
+            <div class="program-desc" style="font-size:13px; opacity:0.7; margin-top:4px;">${item.description || ""}</div>
           </td>
         `;
         list.appendChild(tr);
