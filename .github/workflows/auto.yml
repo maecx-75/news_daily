@@ -2,6 +2,7 @@ name: Auto Update
 
 on:
   schedule:
+    # Läuft weiterhin mehrmals pro Stunde
     - cron: "2,12,27,42,47,57 * * * *"
   workflow_dispatch:
 
@@ -13,30 +14,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          # Cache für Pip aktivieren, um die Installation drastisch zu beschleunigen
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install requests beautifulsoup4 playwright yt-dlp ytdlp-servustv
 
+      # Falls Ihre anderen Skripte (z. B. Wetter oder TV-Programm) noch Playwright brauchen,
+      # installieren wir hier NUR den absolut notwendigen Chromium-Browser ohne Extras (--with-deps)
       - name: Install Playwright browser
-        run: python -m playwright install chromium
+        run: python -m playwright install chromium --with-deps
 
-      - name: Update News 90
+      # Wir nutzen "continue-on-error: true", damit ein Fehler in einem Skript 
+      # nicht die nachfolgenden Updates (z.B. Wetter) komplett blockiert.
+      - name: Update News 90 (API Version)
         run: python scripts/update_news90.py
+        continue-on-error: true
 
-      - run: python scripts/update_news1920.py
-      - run: python scripts/update_google_headlines.py
-      - run: python scripts/update_weather90.py
-      - run: python scripts/update_tv_program.py
+      - name: Update News 1920
+        run: python scripts/update_news1920.py
+        continue-on-error: true
 
-      - run: |
+      - name: Update Google Headlines
+        run: python scripts/update_google_headlines.py
+        continue-on-error: true
+
+      - name: Update Weather 90
+        run: python scripts/update_weather90.py
+        continue-on-error: true
+
+      - name: Update TV Program
+        run: python scripts/update_tv_program.py
+        continue-on-error: true
+
+      # Der finale Push sichert alle erfolgreich aktualisierten JSON-Dateien
+      - name: Commit and Push changes
+        run: |
           git config user.name "bot"
           git config user.email "bot@github.com"
           git add .
-          git commit -m "auto update" || exit 0
+          git commit -m "auto update (news, weather & program)" || exit 0
           git push
