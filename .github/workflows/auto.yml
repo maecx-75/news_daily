@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          # Cache wurde entfernt, damit es ohne requirements.txt fehlerfrei läuft
 
       - name: Install dependencies
         run: |
@@ -30,7 +29,6 @@ jobs:
       - name: Install Playwright browser
         run: python -m playwright install chromium --with-deps
 
-       Tar-Skripte nacheinander ausführen (Fehler fangen)
       - name: Update News 90 (API Version)
         run: python scripts/update_news90.py
         continue-on-error: true
