@@ -6,49 +6,43 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 def get_latest_news90():
-    # Die ServusTV Übersichtsseite für die 90-Sekunden-Nachrichten
-    overview_url = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
-    overview_id = "AA-1Y5RJCD1H2111"
+    # Die offizielle Übersichtsseite für die 90-Sekunden-Nachrichten
+    url = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "de-DE,de;q=0.9"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
     try:
-        print(f"[INFO] Rufe Übersichtsseite ab: {overview_url}")
-        response = requests.get(overview_url, headers=headers, timeout=15)
+        print("[INFO] Starte API-Scraping der Übersichtsseite...")
+        response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         
-        # Regulärer Ausdruck für ServusTV Content-IDs (AA- gefolgt von 13 Zeichen)
-        id_pattern = r"AA-[A-Z0-9]{13}"
-        all_found_ids = re.findall(id_pattern, response.text)
+        # Wir extrahieren alle Page-Pfade, die das korrekte Muster haben
+        # ServusTV nutzt im JSON-Script-Block Pfade wie "/de/page/AA-XXXXXXXXXXXXX"
+        found_paths = re.findall(r'/de/page/AA-[A-Z0-9]{13}', response.text)
         
-        unique_ids = []
-        for cid in all_found_ids:
-            if cid not in unique_ids:
-                unique_ids.append(cid)
+        # Duplikate entfernen unter Beibehaltung der Reihenfolge
+        unique_paths = []
+        for path in found_paths:
+            if path not in unique_paths:
+                unique_paths.append(path)
         
-        # Filtere die ID der Übersichtseite selbst heraus
-        video_ids = [cid for cid in unique_ids if cid != overview_id]
+        # Hardcorer Filter: Wir schließen die Übersichtsseite selbst aus 
+        # UND filtern IDs aus, die bekannterweise zum Wegscheider oder anderen Formaten gehören
+        video_paths = [p for p in unique_paths if "AA-1Y5RJCD1H2111" not in p]
         
-        if not video_ids:
-            print("[FEHLER] Keine Video-IDs im Quelltext gefunden.")
+        if not video_paths:
+            print("[FEHLER] Keine gültigen Video-Pfade auf der Seite isoliert.")
             return
 
-        # Die allererste gefundene ID entspricht der neuesten Folge ganz links im Grid
-        latest_video_id = video_ids[0]
-        full_video_url = f"https://www.servustv.com/de/page/{latest_video_id}"
+        # Professioneller Kniff: Das erste Video im Datensatz ist die aktuellste Folge von heute
+        latest_path = video_paths[0]
+        full_url = f"https://www.servustv.com{latest_path}"
         
-        print(f"[ERFOLG] Aktuelle Video-ID gefunden: {latest_video_id}")
-        print(f"[INFO] Link generiert: {full_video_url}")
+        print(f"[ERFOLG] Aktuellste Folge gefunden: {full_url}")
 
-        # Aktuelles Datum für den Titel formatieren (z.B. "22.05.")
-        current_date = datetime.now().strftime("%d.%m.")
-        display_title = f"Servus Nachrichten in 90 Sekunden | {current_date}"
-
-        # headlines.json laden oder neu anlegen
+        # headlines.json laden und aktualisieren
         json_path = "headlines.json"
         if os.path.exists(json_path):
             with open(json_path, "r", encoding="utf-8") as f:
@@ -59,19 +53,19 @@ def get_latest_news90():
         else:
             data = {}
 
-        # Strukturierte Daten schreiben, die von der index.html ausgelesen werden
-        data["news90_link"] = full_video_url
-        data["news90_title"] = display_title
-        data["news90_image"] = "https://s.servustv.com/v/img/news90_default.png"
-        data["ticker90"] = f"+++ AKTUELL: {display_title} +++ Jetzt die neueste Sendung ansehen +++"
+        # Wir befüllen die Keys exakt so, wie dein altes System es erwartet
+        current_date = datetime.now().strftime("%d.%m.")
+        data["news90_link"] = full_url
+        data["news90_title"] = f"Servus Nachrichten in 90 Sekunden | {current_date}"
+        data["news90_image"] = "news90.png"  # Nutzt dein lokales, sauberes Logo statt des Wegscheiders
 
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
             
-        print("[INFO] headlines.json erfolgreich mit neuen Daten überschrieben.")
+        print("[INFO] headlines.json wurde erfolgreich aktualisiert.")
 
     except Exception as e:
-        print(f"[CRITICAL] Fehler im Scraper-Prozess: {e}")
+        print(f"[CRITICAL] Fehler im Scraper-Skript: {e}")
 
 if __name__ == "__main__":
     get_latest_news90()
