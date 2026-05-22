@@ -50,29 +50,8 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 .toast.show{opacity:1;transform:translateY(0)}
 
 .live-row{margin:30px auto;text-align:center}
-.live-row a{display:inline-block;background:linear-gradient(90deg,#c40012,#8b000c);color:white;font-size:22px;font-weight:800;padding:16px 30px;border-radius:12px;text-decoration:none;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:transform .2s ease}
-.live-row a:hover{transform:scale(1.05)}
-
-.tv-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;padding:30px}
-.tv-modal-content{max-width:1100px;margin:auto;background:#f4f6f8;color:#111;border-radius:18px;max-height:85vh;overflow-y:auto;border:1px solid rgba(255,255,255,.08);box-shadow:0 14px 32px rgba(0,0,0,.35)}
-.tv-modal-header{position:sticky;top:0;background:#f4f6f8;z-index:2;padding:26px 30px 18px;border-bottom:4px solid #111;display:flex;justify-content:space-between;align-items:center;gap:20px}
-.tv-modal-header h2{font-size:36px;font-weight:900;letter-spacing:-.04em;color:#000}
-.close-btn{border:none;background:none;color:#111;font-size:42px;line-height:1;cursor:pointer;font-weight:900}
-.tv-program-table{width:100%;border-collapse:collapse;background:#fff}
-.tv-program-table thead th{background:#d8e0e5;color:#333;text-align:left;text-transform:uppercase;font-size:13px;letter-spacing:.08em;padding:14px 20px}
-.tv-program-table tbody tr{border-bottom:1px solid #d7dde1}
-.tv-program-table tbody tr:nth-child(even){background:#eef3f6}
-.tv-program-table td{padding:16px 20px;vertical-align:top}
-.program-sender{font-weight:900;font-size:13px;color:#fff;background:#111;display:inline-block;padding:3px 5px;border-bottom:5px solid #1354c8}
-.program-type{display:inline-block;margin-top:4px;background:#444;color:#fff;font-size:12px;font-weight:900;padding:3px 5px;text-transform:uppercase}
-.program-time{font-size:19px;font-weight:900;color:#000;white-space:nowrap}
-.program-duration{color:#777;font-weight:700;margin-top:4px}
-.program-title{font-size:20px;font-weight:900;color:#111;margin-bottom:4px}
-.program-desc{font-size:14px;color:#444;line-height:1.35}
-.program-now{box-shadow:inset 6px 0 0 var(--red)}
-.program-now .program-time{color:var(--red)}
-
-/* GAME */
+.live-btn-main{display:inline-block;background:linear-gradient(90deg,#c40012,#8b000c);color:white;font-size:22px;font-weight:800;padding:16px 30px;border-radius:12px;text-decoration:none;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:transform .2s ease;margin-bottom:20px}
+.live-btn-main:hover{transform:scale(1.05)}
 
 .game-box{
   max-width:1500px;
@@ -82,6 +61,8 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   border-radius:10px;
   overflow:hidden;
   box-shadow:0 14px 32px rgba(0,0,0,.45);
+  color: #fff;
+  text-align: left;
 }
 
 .game-header{
@@ -297,29 +278,30 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 </main>
 
 <div class="live-row">
-  <a href="https://www.servustv.com/jetzt-live/" target="_blank">
+  <a class="live-btn-main" href="https://www.servustv.com/jetzt-live/" target="_blank">
     ▶ ServusTV Live – Hier klicken
-    <section class="game-box">
-  <div class="game-header">
-    <div>
-      <h2>Energy Runner</h2>
-      <p>Springe mit Leertaste, Klick oder Tippen und sammle Dosen ein.</p>
-    </div>
-    <div class="game-score">
-      <span>Score: <b id="score">0</b></span>
-      <span>🏆 Best: <b id="best">0</b></span>
-    </div>
-  </div>
-
-  <canvas id="gameCanvas" width="1200" height="170"></canvas>
-
-  <div class="game-controls">
-    <button onclick="startGame()">▶ Start</button>
-    <button onclick="restartGame()">↻ Neustart</button>
-    <span>Leertaste / Klick / Touch = Springen</span>
-  </div>
-</section>
   </a>
+  
+  <section class="game-box">
+    <div class="game-header">
+      <div>
+        <h2>Energy Runner</h2>
+        <p>Springe mit Leertaste, Klick oder Tippen und sammle Dosen ein.</p>
+      </div>
+      <div class="game-score">
+        <span>Score: <b id="score">0</b></span>
+        <span>🏆 Best: <b id="best">0</b></span>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas" width="1200" height="170"></canvas>
+
+    <div class="game-controls">
+      <button onclick="startGame()">▶ Start</button>
+      <button onclick="restartGame()">↻ Neustart</button>
+      <span>Leertaste / Klick / Touch = Springen</span>
+    </div>
+  </section>
 </div>
 
 <div class="toast" id="toast">Link kopiert</div>
@@ -388,18 +370,6 @@ const citySel = document.getElementById("city");
 citySel.addEventListener("change",()=>updateSun(citySel.value));
 updateSun(citySel.value);
 
-function normalizeUrl(data, prefix){
-  return data[prefix + "_link"] || data[prefix + "_url"] || data.url || data.href || "#";
-}
-
-function normalizeImage(data, prefix){
-  return data[prefix + "_image"] || data[prefix + "_thumbnail"] || data.image || data.thumbnail || "";
-}
-
-function normalizeTitle(data, prefix){
-  return data[prefix + "_title"] || data[prefix + "_short"] || data.short_title || data.title || data.full_title || "Neuester Titel nicht verfügbar.";
-}
-
 async function loadHeadlines(){
   try{
     const res = await fetch("headlines.json?ts=" + Date.now(), {
@@ -442,24 +412,6 @@ async function loadHeadlines(){
 
     if(news90Headline){
       news90Headline.textContent = news90Title.split("|")[0].trim();
-    }
-
-    const news90Subline = document.getElementById("news90Subline");
-    if(news90Subline){
-      news90Subline.textContent = "Nachrichten in 90 Sekunden";
-    }
-
-    const news90Image =
-      data.news90_image ||
-      data.news90_thumbnail ||
-      data.image ||
-      data.thumbnail ||
-      "news90.png";
-
-    if(news90Tile && news90Image){
-      const separator = news90Image.includes("?") ? "&" : "?";
-      news90Tile.style.backgroundImage =
-        `url('${news90Image}${separator}cache=${Date.now()}')`;
     }
 
     const news1920Tile = document.getElementById("news1920Tile");
@@ -526,7 +478,6 @@ async function loadHeadlines(){
 }
 
 loadHeadlines();
-setTimeout(loadHeadlines,2000);
 setInterval(loadHeadlines,60000);
 
 function refreshLiveImage(){
@@ -650,6 +601,8 @@ window.addEventListener("keydown",function(e){
 
 initLikes();
 loadTvProgram();
+
+// GAME CODE RESUME
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
