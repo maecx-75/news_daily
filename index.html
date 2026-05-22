@@ -1,810 +1,142 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Das Wichtigste des Tages</title>
-
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--red:#c40012;--dark-red:#8b000c;--black-red:#650008;--bg:#000;--shadow:0 14px 32px rgba(0,0,0,.35);--border:rgba(255,255,255,.08)}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
-
-.topbar{background:linear-gradient(90deg,var(--red) 0%,var(--dark-red) 65%,var(--black-red) 100%);min-height:120px;display:grid;grid-template-columns:180px 1fr 420px;align-items:center;padding:16px 24px;border-bottom:16px solid #540007;gap:12px}
-.logo img{width:92px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.28)}
-.headline{text-align:center}
-.headline h1{font-size:clamp(28px,3.6vw,52px);font-weight:900;letter-spacing:-.03em}
-.headline p{font-size:clamp(13px,1.1vw,18px);font-weight:600}
-.meta{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;align-items:center}
-.meta-box,.meta select{padding:6px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-weight:700}
-.meta select{background:#fff;color:#111}
-
-.banner{display:grid;grid-template-columns:290px 1fr;align-items:center;background:#111;border-bottom:2px solid var(--red);min-height:54px}
-.banner-label{background:var(--red);height:100%;display:flex;align-items:center;padding:0 14px;font-weight:900;font-size:18px;white-space:nowrap}
-.banner-viewport{overflow:hidden;position:relative;height:100%;display:flex;align-items:center}
-.banner-track{white-space:nowrap;display:inline-block;padding-left:100%;animation:scroll 22s linear infinite;font-size:18px}
-@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-@keyframes pulse{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}
-
-.main{max-width:1500px;margin:20px auto;padding:0 20px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px}
-.tile{position:relative;border-radius:10px;overflow:hidden;text-decoration:none;color:#fff;background-size:cover;background-position:center;min-height:280px;display:block;box-shadow:var(--shadow);border:1px solid var(--border)}
-.tile.large{grid-column:span 4}
-.tile.small{grid-column:span 4;min-height:220px}
-.overlay{position:absolute;bottom:0;width:100%;padding:15px;background:linear-gradient(transparent,rgba(0,0,0,.88))}
-.sub{font-size:14px;opacity:.95;margin-top:6px}
-
-.headlines{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.72);padding:10px;border-radius:8px;font-size:13px;max-width:60%;min-width:240px}
-.headlines .title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
-.headlines div.item{margin-bottom:6px;line-height:1.3}
-
-.live-badge{position:absolute;top:12px;left:12px;z-index:2;display:inline-flex;align-items:center;gap:8px;background:rgba(196,0,18,.95);color:#fff;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;border-radius:999px;box-shadow:0 8px 18px rgba(0,0,0,.28)}
-.live-dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
-
-.tile-actions{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:8px}
-.action-btn{border:none;background:rgba(0,0,0,.58);color:#fff;backdrop-filter:blur(6px);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.25)}
-.action-btn:hover{background:rgba(0,0,0,.76)}
-.action-btn.liked{background:rgba(196,0,18,.95)}
-
-.toast{position:fixed;right:18px;bottom:18px;background:rgba(0,0,0,.88);color:#fff;padding:12px 14px;border-radius:12px;font-weight:700;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 32px rgba(0,0,0,.35);opacity:0;transform:translateY(10px);pointer-events:none;transition:all .25s ease;z-index:9999}
-.toast.show{opacity:1;transform:translateY(0)}
-
-.live-row{margin:30px auto;text-align:center}
-.live-btn-main{display:inline-block;background:linear-gradient(90deg,#c40012,#8b000c);color:white;font-size:22px;font-weight:800;padding:16px 30px;border-radius:12px;text-decoration:none;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:transform .2s ease;margin-bottom:20px}
-.live-btn-main:hover{transform:scale(1.05)}
-
-.game-box{
-  max-width:1500px;
-  margin:25px auto 35px;
-  background:#071018;
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 14px 32px rgba(0,0,0,.45);
-  color: #fff;
-  text-align: left;
-}
-
-.game-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 18px;
-  background:#0c1722;
-}
-
-.game-header h2{
-  font-size:24px;
-  font-weight:900;
-}
-
-.game-header p{
-  font-size:13px;
-  opacity:.85;
-  margin-top:3px;
-}
-
-.game-score{
-  display:flex;
-  gap:12px;
-}
-
-.game-score span{
-  background:rgba(255,255,255,.08);
-  padding:8px 14px;
-  border-radius:8px;
-  font-weight:800;
-}
-
-#gameCanvas{
-  width:100%;
-  height:170px;
-  display:block;
-  background:linear-gradient(#76bff2,#dff4ff 55%,#444 56%,#222);
-}
-
-.game-controls{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:10px 18px;
-  background:#08111a;
-}
-
-.game-controls button{
-  background:#a40010;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  padding:9px 16px;
-  font-weight:800;
-  cursor:pointer;
-  transition:.2s;
-}
-
-.game-controls button:hover{
-  transform:scale(1.05);
-}
-
-.game-controls span{
-  font-size:13px;
-  opacity:.8;
-}
-
-@media(max-width:1100px){
-  .topbar{grid-template-columns:1fr;text-align:center}
-  .meta{justify-content:center}
-  .tile.large,.tile.small{grid-column:span 12}
-  .headlines{max-width:calc(100% - 20px);min-width:0}
-  .banner{grid-template-columns:1fr}
-  .banner-label{justify-content:center;padding:10px 14px}
-  .banner-viewport{min-height:48px}
-
-  .game-header{
-    flex-direction:column;
-    gap:10px;
-    text-align:center;
-  }
-
-  .game-controls{
-    flex-wrap:wrap;
-    justify-content:center;
-  }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Das Wichtigste des Tages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0c0c0c;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #b30000;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .ticker-container {
+            background-color: #1a1a1a;
+            padding: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            border-bottom: 3px solid #b30000;
+        }
+        .ticker-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: ticker 25s linear infinite;
+            font-weight: bold;
+            color: #ffcccc;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .card {
+            background-color: #1c1c1c;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.3s;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: scale(1.02);
+        }
+        .card-img-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        .card img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-content {
+            padding: 15px;
+            flex-grow: 1;
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+        .card p {
+            margin: 0;
+            color: #aaaaaa;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
-
 <body>
 
-<header class="topbar">
-  <div class="logo">
-    <img src="logo.png" alt="ServusTV On Logo">
-  </div>
-
-  <div class="headline">
-    <h1>Das Wichtigste des Tages</h1>
-    <p>Die Top Nachrichten und das Wetter für Österreich</p>
-  </div>
-
-  <div class="meta">
-    <div class="meta-box" id="time">--:--</div>
-    <select id="city">
-      <option>Salzburg</option>
-      <option>Wien</option>
-      <option>Linz</option>
-      <option>Graz</option>
-      <option>Innsbruck</option>
-      <option>Klagenfurt</option>
-      <option>St. Pölten</option>
-      <option>Eisenstadt</option>
-      <option>Bregenz</option>
-    </select>
-    <div class="meta-box" id="sunrise">🌅 --:--</div>
-    <div class="meta-box" id="sunset">🌇 --:--</div>
-    <div class="meta-box" id="lastUpdate">🔄 Update: --:--</div>
-  </div>
-</header>
-
-<div class="banner">
-  <div class="banner-label">Topmeldungen 90 Sekunden:</div>
-  <div class="banner-viewport">
-    <div class="banner-track" id="bannerText">Lade Topmeldung …</div>
-  </div>
-</div>
-
-<main class="main">
-<div class="grid">
-
-  <a class="tile large" id="news90Tile" href="#" target="_blank" data-share-url="#" style="background-image:url('news90.png')">
-    <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-news90" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
-    </div>
-    <div class="overlay">
-      <h2 id="news90Headline">Lade Headline …</h2>
-      <div class="sub" id="news90Subline">Servus Nachrichten in 90 Sekunden</div>
-    </div>
-  </a>
-
-  <a class="tile large" id="news1920Tile"
-     href="https://www.servustv.com/de/page/AA-1Y5RJCD1H2111/"
-     target="_blank"
-     data-share-url="https://www.servustv.com/de/page/AA-1Y5RJCD1H2111/"
-     style="background-image:url('news1920.png')">
-    <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-news1920" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
-    </div>
-    <div class="overlay">
-      <h2 id="news1920Headlines">Lade Headlines …</h2>
-      <div class="sub">Servus Nachrichten</div>
-    </div>
-  </a>
-
-  <a class="tile large" id="weather90Tile"
-     href="https://www.servustv.com/de/page/AA90VBHT0KRB2CMU1AHQ/"
-     target="_blank"
-     data-share-url="https://www.servustv.com/de/page/AA90VBHT0KRB2CMU1AHQ/"
-     style="background-image:url('wetter.png')">
-    <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-wetter90" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
-    </div>
-    <div class="overlay">
-      <h2 id="weather90Headline">Lade Wetter-Headline …</h2>
-      <div class="sub" id="weather90Subline">Wetter in 90 Sekunden</div>
-    </div>
-  </a>
-
-  <div class="tile small" onclick="openTvProgram()" style="background-image:url('SERVUSTV_programm.jpg');cursor:pointer;">
-    <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-tv" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="event.preventDefault();event.stopPropagation();openTvProgram();">📺 Öffnen</button>
-    </div>
-    <div class="overlay">
-      <h2>TV Programm</h2>
-      <div class="sub" id="tv-now">Lade aktuelles Programm …</div>
-    </div>
-  </div>
-
-  <a class="tile small" href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" target="_blank" data-share-url="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtUmxHZ0pCVkNnQVAB?hl=de&gl=AT&ceid=AT%3Ade" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80')">
-    <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-google" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
-    </div>
-    <div class="headlines" id="googleHeadlines">
-      <div class="title">Top Schlagzeilen</div>
-      <div class="item">• Lade Schlagzeile 1 …</div>
-      <div class="item">• Lade Schlagzeile 2 …</div>
-      <div class="item">• Lade Schlagzeile 3 …</div>
-    </div>
-    <div class="overlay">
-      <h2>Top Nachrichten</h2>
-    </div>
-  </a>
-
-  <a class="tile small" id="liveTile" href="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" target="_blank" data-share-url="https://www.servustv.com/aktuelles/k/wetterpanorma-kanal/pn2c35800228344/" style="background-image:url('wetter-live.jpg')">
-    <div class="live-badge"><span class="live-dot"></span>Live</div>
-    <div class="tile-actions" style="top:64px;">
-      <button class="action-btn like-btn" data-like-key="tile-live" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
-    </div>
-    <div class="overlay">
-      <h2>Wetterpanorama Live</h2>
-    </div>
-  </a>
-
-</div>
-</main>
-
-<div class="live-row">
-  <a class="live-btn-main" href="https://www.servustv.com/jetzt-live/" target="_blank">
-    ▶ ServusTV Live – Hier klicken
-  </a>
-  
-  <section class="game-box">
-    <div class="game-header">
-      <div>
-        <h2>Energy Runner</h2>
-        <p>Springe mit Leertaste, Klick oder Tippen und sammle Dosen ein.</p>
-      </div>
-      <div class="game-score">
-        <span>Score: <b id="score">0</b></span>
-        <span>🏆 Best: <b id="best">0</b></span>
-      </div>
+    <div class="header">
+        <h1>Das Wichtigste des Tages</h1>
+        <p>Die Top Nachrichten und das Wetter für Österreich</p>
     </div>
 
-    <canvas id="gameCanvas" width="1200" height="170"></canvas>
-
-    <div class="game-controls">
-      <button onclick="startGame()">▶ Start</button>
-      <button onclick="restartGame()">↻ Neustart</button>
-      <span>Leertaste / Klick / Touch = Springen</span>
-    </div>
-  </section>
-</div>
-
-<div class="toast" id="toast">Link kopiert</div>
-
-<div class="tv-modal" id="tvModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; overflow-y:auto; padding:40px 20px;">
-  <div class="tv-modal-content" style="max-width:800px; margin:0 auto; background:#111; border:1px solid #333; border-radius:12px; padding:20px;">
-    <div class="tv-modal-header" style="display:flex; justify-content:between; align-items:center; margin-bottom:20px; border-bottom:1px solid #222; padding-bottom:10px;">
-      <h2>ServusTV heute</h2>
-      <button class="close-btn" onclick="closeTvProgram()" style="background:none; border:none; color:#fff; font-size:32px; cursor:pointer;">&times;</button>
+    <div class="ticker-container">
+        <div id="ticker" class="ticker-text">Lade aktuelle Schlagzeilen...</div>
     </div>
 
-    <table class="tv-program-table" style="width:100%; border-collapse:collapse; color:#fff; text-align:left;">
-      <thead>
-        <tr style="border-bottom:2px solid #var(--red);">
-          <th style="padding:10px;">Sender</th>
-          <th style="padding:10px;">Zeit</th>
-          <th style="padding:10px;">Titel</th>
-        </tr>
-      </thead>
-      <tbody id="tvProgramList"></tbody>
-    </table>
-  </div>
-</div>
-
-<script>
-function updateTime(){
-  const now = new Date();
-  document.getElementById("time").textContent =
-    now.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-}
-setInterval(updateTime,20000);
-updateTime();
-
-const coords={
-  "Salzburg":[47.8095,13.0550],
-  "Wien":[48.2082,16.3738],
-  "Linz":[48.3069,14.2858],
-  "Graz":[47.0707,15.4395],
-  "Innsbruck":[47.2692,11.4041],
-  "Klagenfurt":[46.6365,14.3122],
-  "St. Pölten":[48.2047,15.6241],
-  "Eisenstadt":[47.8457,16.5233],
-  "Bregenz":[47.5031,9.7471]
-};
-
-async function updateSun(city){
-  const c = coords[city];
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&daily=sunrise,sunset&timezone=Europe%2FBerlin`;
-
-  try{
-    const res = await fetch(url);
-    const data = await res.json();
-
-    const sr = new Date(data.daily.sunrise[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-    const ss = new Date(data.daily.sunset[0]).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-
-    document.getElementById("sunrise").textContent = "🌅 " + sr;
-    document.getElementById("sunset").textContent = "🌇 " + ss;
-  }catch(e){
-    document.getElementById("sunrise").textContent = "🌅 --:--";
-    document.getElementById("sunset").textContent = "🌇 --:--";
-  }
-}
-
-const citySel = document.getElementById("city");
-citySel.addEventListener("change",()=>updateSun(citySel.value));
-updateSun(citySel.value);
-
-async function loadHeadlines(){
-  try{
-    const res = await fetch("headlines.json?ts=" + Date.now(), {
-      cache: "no-store"
-    });
-    const data = await res.json();
-
-    document.getElementById("lastUpdate").textContent =
-      "🔄 Update: " + new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
-
-    // 1. Newsticker befüllen (Verwendet den präzisen Ticker-String)
-    const tickerText = data.ticker90 || "Keine Topmeldung eingetragen.";
-    document.getElementById("bannerText").textContent = tickerText;
-
-    // 2. Kachel Links Oben: Link & Share-URL einbinden
-    const news90Tile = document.getElementById("news90Tile");
-    const news90Url = data.news90_link || "#";
-    if(news90Tile){
-      news90Tile.href = news90Url;
-      news90Tile.dataset.shareUrl = news90Url;
-    }
-
-    // 3. Kachel Links Oben: Bild dynamisch übergeben
-    if(data.news90_image && news90Tile){
-      news90Tile.style.backgroundImage = `url('${data.news90_image}')`;
-    }
-
-    // 4. Kachel Links Oben: Saubere Headline direkt einsetzen
-    const news90Headline = document.getElementById("news90Headline");
-    if(news90Headline){
-      news90Headline.textContent = data.news90_title || "Servus Nachrichten in 90 Sekunden";
-    }
-
-    const news1920Tile = document.getElementById("news1920Tile");
-    if(data.news1920_link && news1920Tile){
-      news1920Tile.href = data.news1920_link;
-      news1920Tile.dataset.shareUrl = data.news1920_link;
-    }
-
-    const news1920Headlines = document.getElementById("news1920Headlines");
-    if(news1920Headlines){
-      let title = data.news1920_headlines || data.news1920_title || "";
-      let parts = title.split("|").map(t => t.trim()).filter(Boolean);
-
-      if(parts.length >= 3){
-        parts[0] = parts[0]
-          .replace(/^.*?Nachrichten\s*19:20\s*/i, "")
-          .replace(/^Nachrichten\s*/i, "")
-          .replace(/^Servus\s*/i, "")
-          .trim();
-
-        parts[2] = parts[2].replace(/Nachrichten.*$/i, "").trim();
-      }
-
-      parts = parts.slice(0, 3);
-
-      news1920Headlines.innerHTML = parts.length
-        ? parts.join(" | ")
-        : "• Keine Headlines verfügbar";
-    }
-
-    if(data.news1920_image && news1920Tile){
-      news1920Tile.style.backgroundImage = `url('${data.news1920_image}')`;
-    }
-
-    const weatherTile = document.getElementById("weather90Tile");
-    if(data.weather90_link && weatherTile){
-      weatherTile.href = data.weather90_link;
-      weatherTile.dataset.shareUrl = data.weather90_link;
-    }
-
-    const weatherHeadline = document.getElementById("weather90Headline");
-    if(weatherHeadline){
-      const title = data.weather90_title || data.weather90_short || "Neuester Titel nicht verfügbar.";
-      weatherHeadline.textContent = title.split("|")[0].trim();
-    }
-
-    if(data.weather90_image && weatherTile){
-      weatherTile.style.backgroundImage = `url('${data.weather90_image}')`;
-    }
-
-    const box = document.getElementById("googleHeadlines");
-    if(box){
-      const items = Array.isArray(data.google_headlines) ? data.google_headlines.slice(0,3) : [];
-      box.innerHTML =
-        '<div class="title">Top Schlagzeilen</div>' +
-        (items.length
-          ? items.map(text => `<div class="item">• ${text}</div>`).join("")
-          : '<div class="item">• Keine Schlagzeilen eingetragen.</div>');
-    }
-
-  }catch(e){
-    console.log("Fehler beim Laden headlines:", e);
-  }
-}
-
-loadHeadlines();
-setInterval(loadHeadlines,60000);
-
-function refreshLiveImage(){
-  const liveTile = document.getElementById("liveTile");
-  if(liveTile){
-    liveTile.style.backgroundImage = "url('wetter-live.jpg?t=" + Date.now() + "')";
-  }
-}
-setInterval(refreshLiveImage,10000);
-
-function showToast(text){
-  const toast = document.getElementById("toast");
-  toast.textContent = text;
-  toast.classList.add("show");
-  clearTimeout(window.toastTimer);
-  window.toastTimer = setTimeout(()=>toast.classList.remove("show"),1600);
-}
-
-function toggleLike(event, btn){
-  event.preventDefault();
-  event.stopPropagation();
-
-  const key = btn.dataset.likeKey;
-  const next = localStorage.getItem(key) !== "1";
-
-  localStorage.setItem(key,next ? "1" : "0");
-  syncLikeButton(btn);
-  showToast(next ? "Geliked" : "Like entfernt");
-}
-
-function syncLikeButton(btn){
-  const liked = localStorage.getItem(btn.dataset.likeKey) === "1";
-  btn.classList.toggle("liked",liked);
-  btn.textContent = liked ? "♥ Geliked" : "♡ Like";
-}
-
-function initLikes(){
-  document.querySelectorAll(".like-btn").forEach(syncLikeButton);
-}
-
-async function shareTile(event, tile){
-  event.preventDefault();
-  event.stopPropagation();
-
-  const url = tile.dataset.shareUrl || tile.href;
-  const title = tile.querySelector("h2")?.textContent || "Artikel";
-
-  try{
-    if(navigator.share){
-      await navigator.share({title,url});
-    }else{
-      await navigator.clipboard.writeText(url);
-      showToast("Link kopiert");
-    }
-  }catch(e){}
-}
-
-async function loadTvProgram(){
-  try{
-    const res = await fetch("tv_program.json?ts=" + Date.now(),{
-      cache:"no-store"
-    });
-
-    const data = await res.json();
-    const list = document.getElementById("tvProgramList");
-    const nowBox = document.getElementById("tv-now");
-
-    if(!list || !nowBox) return;
-
-    list.innerHTML = "";
-
-    const items = Array.isArray(data.program) ? data.program : [];
-
-    if(items.length){
-      const current = items.find(item => item.is_now) || items[0];
-      nowBox.textContent = current.start + " • " + current.title;
-
-      items.forEach(item=>{
-        const tr = document.createElement("tr");
-        tr.className = item.is_now ? "program-now" : "";
-        tr.innerHTML = `
-          <td style="padding:10px; border-bottom:1px solid #222;">
-            <span class="program-sender" style="color:var(--red); font-weight:bold;">ServusTV</span><br>
-            <span class="program-type" style="font-size:12px; opacity:0.6;">${item.genre || ""}</span>
-          </td>
-          <td style="padding:10px; border-bottom:1px solid #222;">
-            <div class="program-time" style="font-weight:bold;">${item.start}</div>
-            <div class="program-duration" style="font-size:12px; opacity:0.6;">${item.end || ""}</div>
-          </td>
-          <td style="padding:10px; border-bottom:1px solid #222;">
-            <div class="program-title" style="font-weight:bold; color:#fff;">${item.title || ""}</div>
-            <div class="program-desc" style="font-size:13px; opacity:0.7; margin-top:4px;">${item.description || ""}</div>
-          </td>
-        `;
-        list.appendChild(tr);
-      });
-    }else{
-      nowBox.textContent = "TV Programm aktuell nicht verfügbar.";
-      list.innerHTML = '<tr><td colspan="3">TV Programm aktuell nicht verfügbar.</td></tr>';
-    }
-
-  }catch(e){
-    console.log("TV Programm Fehler:",e);
-    const nowBox = document.getElementById("tv-now");
-    if(nowBox) nowBox.textContent = "TV Programm konnte nicht geladen werden.";
-  }
-}
-
-function openTvProgram(){
-  document.getElementById("tvModal").style.display = "block";
-  loadTvProgram();
-}
-
-function closeTvProgram(){
-  document.getElementById("tvModal").style.display = "none";
-}
-
-window.addEventListener("keydown",function(e){
-  if(e.key === "Escape") closeTvProgram();
-});
-
-initLikes();
-loadTvProgram();
-
-// GAME CODE RESUME
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-let runner, obstacles, cans, score, best, running, gravity, speed;
-
-function resetGame(){
-  runner = {x:80,y:105,w:38,h:48,vy:0,jump:false};
-  obstacles = [];
-  cans = [];
-  score = 0;
-  best = Number(localStorage.getItem("energyBest") || 0);
-  gravity = 0.8;
-  speed = 4;
-  running = false;
-  document.getElementById("score").textContent = score;
-  document.getElementById("best").textContent = best;
-  drawGame();
-}
-
-function startGame(){
-  if(!running){
-    running = true;
-    requestAnimationFrame(loop);
-  }
-}
-
-function restartGame(){
-  resetGame();
-  startGame();
-}
-
-function jump(){
-  if(!runner.jump){
-    runner.vy = -13;
-    runner.jump = true;
-  }
-}
-
-function drawBackground(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  ctx.fillStyle = "#8fd2ff";
-  ctx.fillRect(0,0,canvas.width,95);
-
-  ctx.fillStyle = "#ffffff";
-  for(let i=0;i<7;i++){
-    ctx.beginPath();
-    ctx.arc(160+i*170,35+(i%2)*18,18,0,Math.PI*2);
-    ctx.arc(185+i*170,35+(i%2)*18,26,0,Math.PI*2);
-    ctx.arc(215+i*170,35+(i%2)*18,16,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  ctx.fillStyle = "#435f78";
-  ctx.beginPath();
-  ctx.moveTo(0,95);
-  ctx.lineTo(130,35);
-  ctx.lineTo(260,95);
-  ctx.lineTo(380,45);
-  ctx.lineTo(540,95);
-  ctx.lineTo(720,40);
-  ctx.lineTo(900,95);
-  ctx.lineTo(1070,50);
-  ctx.lineTo(1200,95);
-  ctx.fill();
-
-  ctx.fillStyle = "#2d2d2d";
-  ctx.fillRect(0,96,canvas.width,74);
-
-  ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 3;
-  ctx.setLineDash([24,18]);
-  ctx.beginPath();
-  ctx.moveTo(0,135);
-  ctx.lineTo(canvas.width,135);
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-function drawRunner(){
-  ctx.fillStyle = "#111";
-  ctx.fillRect(runner.x+10,runner.y+10,20,28);
-
-  ctx.fillStyle = "#f4c28b";
-  ctx.beginPath();
-  ctx.arc(runner.x+20,runner.y,13,0,Math.PI*2);
-  ctx.fill();
-
-  ctx.fillStyle = "#d51b2b";
-  ctx.fillRect(runner.x+5,runner.y+6,30,8);
-
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(runner.x+14,runner.y+38);
-  ctx.lineTo(runner.x+2,runner.y+52);
-  ctx.moveTo(runner.x+25,runner.y+38);
-  ctx.lineTo(runner.x+42,runner.y+52);
-  ctx.stroke();
-}
-
-function drawObstacle(o){
-  ctx.fillStyle = o.type === "rock" ? "#3d3d3d" : "#e33";
-  ctx.fillRect(o.x,o.y,o.w,o.h);
-
-  if(o.type === "barrier"){
-    ctx.fillStyle = "#fff";
-    for(let i=0;i<o.w;i+=18){
-      ctx.fillRect(o.x+i,o.y+6,10,o.h-12);
-    }
-  }
-}
-
-function drawCan(c){
-  ctx.fillStyle = "#1444ff";
-  ctx.fillRect(c.x,c.y,20,42);
-  ctx.fillStyle = "#ff1b1b";
-  ctx.fillRect(c.x+4,c.y+8,12,24);
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(c.x+7,c.y+2,6,4);
-}
-
-function collision(a,b){
-  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
-}
-
-function loop(){
-  if(!running) return;
-
-  drawBackground();
-
-  runner.y += runner.vy;
-  runner.vy += gravity;
-
-  if(runner.y >= 105){
-    runner.y = 105;
-    runner.vy = 0;
-    runner.jump = false;
-  }
-
-  if(Math.random() < 0.018){
-    obstacles.push({
-      x:canvas.width,
-      y:118,
-      w:55,
-      h:32,
-      type:Math.random() > .5 ? "rock" : "barrier"
-    });
-  }
-
-  if(Math.random() < 0.025){
-    cans.push({x:canvas.width,y:85,w:20,h:42});
-  }
-
-  obstacles.forEach(o => o.x -= speed);
-  cans.forEach(c => c.x -= speed);
-
-  obstacles = obstacles.filter(o => o.x > -80);
-  cans = cans.filter(c => c.x > -50);
-
-  obstacles.forEach(o=>{
-    drawObstacle(o);
-    if(collision(runner,o)){
-      running = false;
-      best = Math.max(best,score);
-      localStorage.setItem("energyBest",best);
-      document.getElementById("best").textContent = best;
-    }
-  });
-
-  cans.forEach((c,i)=>{
-    drawCan(c);
-    if(collision(runner,c)){
-      score += 10;
-      cans.splice(i,1);
-    }
-  });
-
-  score++;
-  speed += 0.002;
-
-  document.getElementById("score").textContent = score;
-
-  drawRunner();
-
-  if(running) requestAnimationFrame(loop);
-}
-
-function drawGame(){
-  drawBackground();
-  drawRunner();
-}
-
-document.addEventListener("keydown",e=>{
-  if(e.code === "Space"){
-    e.preventDefault();
-    jump();
-    startGame();
-  }
-});
-
-canvas.addEventListener("click",()=>{
-  jump();
-  startGame();
-});
-
-canvas.addEventListener("touchstart",()=>{
-  jump();
-  startGame();
-});
-
-resetGame();
-</script>
+    <div class="grid-container">
+        <a id="news90_link" href="#" class="card" target="_blank">
+            <div class="card-img-container">
+                <img id="news90_img" src="news90.png" alt="Servus Nachrichten">
+            </div>
+            <div class="card-content">
+                <h3 id="news90_title">Lade aktuelle Sendung...</h3>
+                <p>Servus Nachrichten in 90 Sekunden</p>
+            </div>
+        </a>
+
+        </div>
+
+    <script>
+        // Daten aus der headlines.json live ins Frontend laden
+        fetch('headlines.json?t=' + new Date().getTime())
+            .then(response => response.json())
+            .then(data => {
+                if(data.news90_link) {
+                    document.getElementById('news90_link').href = data.news90_link;
+                }
+                if(data.news90_title) {
+                    document.getElementById('news90_title').innerText = data.news90_title;
+                }
+                if(data.news90_image) {
+                    document.getElementById('news90_img').src = data.news90_image;
+                }
+                if(data.ticker90) {
+                    document.getElementById('ticker').innerText = data.ticker90;
+                }
+            })
+            .catch(error => {
+                print("[FEHLER] JSON konnte nicht geladen werden:", error);
+                document.getElementById('news90_title').innerText = "Nachrichten temporär nicht verfügbar";
+            });
+    </script>
 
 </body>
 </html>
