@@ -356,6 +356,162 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   cursor:pointer;
 }
 
+
+/* KENNST DU ÖSTERREICH */
+.austria-quiz-tile{
+  background:
+    radial-gradient(circle at 82% 22%, rgba(196,0,18,.72), transparent 30%),
+    linear-gradient(135deg,#161616 0%,#2b0005 55%,#76000b 100%);
+}
+.austria-flag{
+  position:absolute;
+  left:22px;
+  top:18px;
+  font-size:76px;
+  line-height:1;
+  opacity:.95;
+}
+.austria-kicker{
+  position:absolute;
+  top:18px;
+  right:18px;
+  background:rgba(196,0,18,.95);
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.place-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100001;
+  background:rgba(0,0,0,.9);
+  padding:24px;
+}
+.place-modal.open{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.place-card{
+  width:min(850px,100%);
+  background:#101010;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 24px 70px rgba(0,0,0,.65);
+}
+.place-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:20px 24px;
+  background:linear-gradient(90deg,#c40012,#690008);
+}
+.place-header h2{
+  font-size:28px;
+  font-weight:900;
+}
+.place-close{
+  border:0;
+  background:rgba(0,0,0,.24);
+  color:#fff;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  font-size:28px;
+  font-weight:900;
+  cursor:pointer;
+}
+.place-body{padding:22px}
+.place-progress{
+  font-size:13px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  opacity:.78;
+  margin-bottom:10px;
+}
+.place-map{
+  width:100%;
+  height:390px;
+  border:0;
+  border-radius:12px;
+  background:#222;
+  display:block;
+}
+.place-question{
+  font-size:22px;
+  font-weight:900;
+  margin:18px 0 14px;
+}
+.place-options{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.place-option{
+  border:1px solid rgba(255,255,255,.16);
+  background:#1d1d1d;
+  color:#fff;
+  border-radius:10px;
+  padding:14px 12px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+.place-option:hover{background:#292929}
+.place-option.correct{background:#145c2e;border-color:#3fa964}
+.place-option.wrong{background:#6f101a;border-color:#c40012}
+.place-feedback{
+  min-height:42px;
+  margin-top:14px;
+  font-size:15px;
+  line-height:1.4;
+}
+.place-next{
+  display:none;
+  margin-top:12px;
+  border:0;
+  background:#c40012;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+}
+.place-result{
+  text-align:center;
+  padding:24px 8px 10px;
+}
+.place-result .score{
+  font-size:52px;
+  font-weight:900;
+  margin:10px 0;
+}
+.place-restart{
+  margin-top:18px;
+  border:0;
+  background:#c40012;
+  color:#fff;
+  padding:13px 20px;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+@media(max-width:700px){
+  .place-map{height:300px}
+  .place-options{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 
@@ -833,6 +989,39 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     </div>
   </div>
 
+
+  <!-- ========================================= -->
+  <!-- KENNST DU ÖSTERREICH -->
+  <!-- ========================================= -->
+
+  <div
+    class="tile small austria-quiz-tile"
+    id="austriaQuizTile"
+    onclick="openAustriaQuiz()"
+    style="cursor:pointer;"
+  >
+    <div class="austria-flag">🇦🇹</div>
+    <div class="austria-kicker">3 Antworten</div>
+
+    <div class="tile-actions">
+      <button
+        class="action-btn like-btn"
+        data-like-key="tile-austria-quiz"
+        onclick="toggleLike(event, this)"
+      >♡ Like</button>
+
+      <button
+        class="action-btn"
+        onclick="event.preventDefault();event.stopPropagation();openAustriaQuiz();"
+      >▶ Spielen</button>
+    </div>
+
+    <div class="overlay">
+      <h2>Kennst du Österreich?</h2>
+      <div class="sub">Erkenne den Ort auf der Karte</div>
+    </div>
+  </div>
+
 </div>
 </main>
 
@@ -873,6 +1062,22 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
       <button class="quiz-close" onclick="closeDailyQuiz()" aria-label="Quiz schließen">×</button>
     </div>
     <div class="quiz-body" id="dailyQuizBody"></div>
+  </div>
+</div>
+
+
+<!-- ========================================= -->
+<!-- KENNST DU ÖSTERREICH MODAL -->
+<!-- ========================================= -->
+
+<div class="place-modal" id="austriaQuizModal" aria-hidden="true">
+  <div class="place-card">
+    <div class="place-header">
+      <h2>Kennst du Österreich?</h2>
+      <button class="place-close" onclick="closeAustriaQuiz()" aria-label="Quiz schließen">×</button>
+    </div>
+
+    <div class="place-body" id="austriaQuizBody"></div>
   </div>
 </div>
 
@@ -1711,6 +1916,182 @@ document.getElementById("dailyQuizModal")?.addEventListener("click",function(e){
 
 window.addEventListener("keydown",function(e){
   if(e.key === "Escape") closeDailyQuiz();
+});
+
+
+
+/* =========================================
+   KENNST DU ÖSTERREICH
+========================================= */
+
+const austriaPlaces = [
+  {
+    name:"Hallstatt",
+    lat:47.5622,
+    lng:13.6493,
+    zoom:15,
+    options:["Hallstatt","Bad Aussee","Mondsee"]
+  },
+  {
+    name:"Zell am See",
+    lat:47.3235,
+    lng:12.7969,
+    zoom:14,
+    options:["Zell am See","Millstatt","Wörgl"]
+  },
+  {
+    name:"Innsbruck",
+    lat:47.2692,
+    lng:11.4041,
+    zoom:14,
+    options:["Innsbruck","Bludenz","Lienz"]
+  },
+  {
+    name:"Salzburg",
+    lat:47.8095,
+    lng:13.0550,
+    zoom:14,
+    options:["Salzburg","Steyr","Kufstein"]
+  },
+  {
+    name:"Klagenfurt",
+    lat:46.6247,
+    lng:14.3053,
+    zoom:14,
+    options:["Klagenfurt","Graz","Bregenz"]
+  }
+];
+
+let austriaQuizIndex = 0;
+let austriaQuizScore = 0;
+let austriaQuizLocked = false;
+
+function openAustriaQuiz(){
+  austriaQuizIndex = 0;
+  austriaQuizScore = 0;
+  austriaQuizLocked = false;
+
+  const modal = document.getElementById("austriaQuizModal");
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  renderAustriaPlace();
+}
+
+function closeAustriaQuiz(){
+  const modal = document.getElementById("austriaQuizModal");
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function getAustriaMapUrl(place){
+  return `https://maps.google.com/maps?ll=${place.lat},${place.lng}&z=${place.zoom}&t=k&output=embed`;
+}
+
+function renderAustriaPlace(){
+  const body = document.getElementById("austriaQuizBody");
+  const place = austriaPlaces[austriaQuizIndex];
+  austriaQuizLocked = false;
+
+  body.innerHTML = `
+    <div class="place-progress">Ort ${austriaQuizIndex + 1} von ${austriaPlaces.length}</div>
+
+    <iframe
+      class="place-map"
+      src="${getAustriaMapUrl(place)}"
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      title="Google Maps Ausschnitt"
+    ></iframe>
+
+    <div class="place-question">Welcher Ort ist hier zu sehen?</div>
+
+    <div class="place-options">
+      ${place.options.map((option,index)=>`
+        <button
+          class="place-option"
+          onclick="answerAustriaQuiz(${index},this)"
+        >${option}</button>
+      `).join("")}
+    </div>
+
+    <div class="place-feedback" id="austriaQuizFeedback"></div>
+
+    <button
+      class="place-next"
+      id="austriaQuizNext"
+      onclick="nextAustriaPlace()"
+    >
+      ${austriaQuizIndex === austriaPlaces.length - 1 ? "Ergebnis anzeigen" : "Nächster Ort"}
+    </button>
+  `;
+}
+
+function answerAustriaQuiz(index,btn){
+  if(austriaQuizLocked) return;
+  austriaQuizLocked = true;
+
+  const place = austriaPlaces[austriaQuizIndex];
+  const selected = place.options[index];
+  const buttons = document.querySelectorAll("#austriaQuizBody .place-option");
+
+  buttons.forEach(button=>{
+    button.disabled = true;
+    if(button.textContent.trim() === place.name){
+      button.classList.add("correct");
+    }
+  });
+
+  if(selected === place.name){
+    austriaQuizScore++;
+    document.getElementById("austriaQuizFeedback").textContent =
+      `Richtig – das ist ${place.name}.`;
+  }else{
+    btn.classList.add("wrong");
+    document.getElementById("austriaQuizFeedback").textContent =
+      `Leider falsch – richtig wäre ${place.name}.`;
+  }
+
+  document.getElementById("austriaQuizNext").style.display = "inline-block";
+}
+
+function nextAustriaPlace(){
+  austriaQuizIndex++;
+
+  if(austriaQuizIndex < austriaPlaces.length){
+    renderAustriaPlace();
+  }else{
+    renderAustriaResult();
+  }
+}
+
+function renderAustriaResult(){
+  const body = document.getElementById("austriaQuizBody");
+  let message = "Da geht noch mehr – probier es gleich noch einmal.";
+
+  if(austriaQuizScore === 5){
+    message = "Perfekt – du kennst Österreich richtig gut.";
+  }else if(austriaQuizScore >= 4){
+    message = "Sehr stark – fast alles erkannt.";
+  }else if(austriaQuizScore >= 3){
+    message = "Gut – du hast einen soliden Österreich-Blick.";
+  }
+
+  body.innerHTML = `
+    <div class="place-result">
+      <div class="place-progress">Dein Ergebnis</div>
+      <div class="score">${austriaQuizScore} / ${austriaPlaces.length}</div>
+      <p>${message}</p>
+      <button class="place-restart" onclick="openAustriaQuiz()">Noch einmal spielen</button>
+    </div>
+  `;
+}
+
+document.getElementById("austriaQuizModal")?.addEventListener("click",function(e){
+  if(e.target === this) closeAustriaQuiz();
+});
+
+window.addEventListener("keydown",function(e){
+  if(e.key === "Escape") closeAustriaQuiz();
 });
 
 
