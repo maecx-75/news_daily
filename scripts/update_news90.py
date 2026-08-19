@@ -1,86 +1,134 @@
-import requests
 import json
-import os
 import re
-from datetime import datetime
+from pathlib import Path
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
+
+ROOT = Path(__file__).resolve().parents[1]
+JSON_PATH = ROOT / "headlines.json"
+NEWS_URL = "https://www.servustv.com/de/nachrichten"
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/131.0 Safari/537.36"
+    )
+}
+
+
+def clean_title(text: str) -> str:
+    text = " ".join((text or "").split())
+    text = re.sub(
+        r"\s*\|\s*Servus Nachrichten in 90 Sekunden\s*$",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return text.strip()
+
+
+def find_image_near_link(link, page_url: str) -> str:
+    # Zuerst direkt im Link bzw. in den nächsten Eltern-Containern suchen.
+    nodes = [link]
+    parent = link.parent
+    for _ in range(5):
+        if parent is None:
+            break
+        nodes.append(parent)
+        parent = parent.parent
+
+    for node in nodes:
+        img = node.find("img") if hasattr(node, "find") else None
+        if not img:
+            continue
+        for attr in ("src", "data-src", "data-lazy-src"):
+            value = img.get(attr)
+            if value:
+                return urljoin(page_url, value)
+        srcset = img.get("srcset")
+        if srcset:
+            first = srcset.split(",")[0].strip().split(" ")[0]
+            if first:
+                return urljoin(page_url, first)
+    return ""
+
+
+def extract_og_image(article_url: str) -> str:
+    response = requests.get(article_url, headers=HEADERS, timeout=25)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+    for attrs in ({"property": "og:image"}, {"name": "twitter:image"}):
+        meta = soup.find("meta", attrs=attrs)
+        if meta and meta.get("content"):
+            return urljoin(article_url, meta["content"])
+    return ""
+
 
 def get_latest_news90():
-    # Die offizielle Übersichtsseite für die 90-Sekunden-Nachrichten
-    url = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+    print("[INFO] Lade ServusTV-Nachrichtenseite …")
+    response = requests.get(NEWS_URL, headers=HEADERS, timeout=25)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
 
-    try:
-        print("[INFO] Starte Abruf der ServusTV-Nachrichten...")
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-        
-        # Isoliere alle Video-Pfad-IDs aus dem Quelltext
-        found_paths = re.findall(r'/de/page/AA-[A-Z0-9]{13}', response.text)
-        
-        unique_paths = []
-        for path in found_paths:
-            if path not in unique_paths:
-                unique_paths.append(path)
-        
-        # --- DER ENTSCHEIDENDE FILTER-FIX ---
-        # Wir schließen die ID der Übersichtsseite aus UND blockieren explizit die ID des Wegscheiders (AAM4TZNNTHP15NYE8H3X)
-        video_paths = [
-            p for p in unique_paths 
-            if "AA-1Y5RJCD1H2111" not in p and "AAM4TZNNTHP15NYE8H3X" not in p
-        ]
-        
-        if not video_paths:
-            print("[FEHLER] Keine echten Video-Links nach der Filterung übrig geblieben.")
-            return
+    # Die Seite ist chronologisch aufgebaut. Wir nehmen den ersten echten
+    # Beitrag, dessen sichtbarer Titel 'Servus Nachrichten in 90 Sekunden' enthält.
+    candidate = None
 
-        # Nimm den ersten verbleibenden Link (das ist die echte aktuelle Nachrichtensendung)
-        latest_path = video_paths[0]
-        full_url = f"https://www.servustv.com{latest_path}"
-        
-        print(f"[ERFOLG] Echte Nachrichtensendung gefunden: {full_url}")
+    for link in soup.find_all("a", href=True):
+        text = " ".join(link.get_text(" ", strip=True).split())
+        if "servus nachrichten in 90 sekunden" not in text.lower():
+            continue
 
-        # Pfad zur headlines.json im Hauptverzeichnis (Root) ermitteln
-        json_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "headlines.json"))
+        href = urljoin(NEWS_URL, link["href"])
+        title = clean_title(text)
 
-        # Bestehende JSON laden, um andere Keys (wie z.B. google_headlines) nicht zu löschen
-        if os.path.exists(json_path):
-            with open(json_path, "r", encoding="utf-8") as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError:
-                    data = {}
-        else:
+        # Navigations-/Serienlinks ohne konkrete Headline ausschließen.
+        if not title or title.lower() == "servus nachrichten in 90 sekunden":
+            continue
+
+        candidate = (title, href, link)
+        break
+
+    if candidate is None:
+        raise RuntimeError("Keinen aktuellen 'Servus Nachrichten in 90 Sekunden'-Beitrag gefunden.")
+
+    title, href, link = candidate
+    image = find_image_near_link(link, NEWS_URL)
+    if not image:
+        image = extract_og_image(href)
+
+    print(f"[ERFOLG] Gefunden: {title}")
+    print(f"[ERFOLG] Link: {href}")
+    if image:
+        print(f"[ERFOLG] Bild: {image}")
+    else:
+        print("[WARNUNG] Kein Bild gefunden – vorhandenes Bild bleibt erhalten.")
+
+    if JSON_PATH.exists():
+        try:
+            data = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
             data = {}
+    else:
+        data = {}
 
-        # Generiere dynamisch das aktuelle Datum für den Titel
-        current_date = datetime.now().strftime("%d.%m.")
-        aktueller_titel = f"Servus Nachrichten in 90 Sekunden | {current_date}"
+    # Nur die Kachel 'Servus Nachrichten in 90 Sekunden' aktualisieren.
+    # Ticker und andere Kacheln bleiben bewusst unangetastet.
+    data["news90_title"] = title
+    data["news90_link"] = href
+    if image:
+        data["news90_image"] = image
+        data["news90_thumbnail"] = image
 
-        # Überschreibe NUR die relevanten Felder für die 90-Sekunden-Kachel
-        data["title"] = aktueller_titel
-        data["short_title"] = aktueller_titel
-        data["full_title"] = aktueller_titel
-        data["url"] = full_url
-        data["href"] = full_url
-        data["news90_title"] = aktueller_titel
-        data["news90_link"] = full_url
-        data["news90_image"] = "news90.png"  # Setzt dein sauberes, lokales Standard-Logo
-        data["ticker"] = aktueller_titel
-        data["ticker90"] = aktueller_titel
-        data["topmeldung90"] = aktueller_titel
-        data["description"] = "Die wichtigsten Nachrichten des Tages kompakt zusammengefasst."
+    JSON_PATH.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
-        # Datei im Hauptverzeichnis speichern
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-            
-        print("[INFO] headlines.json wurde erfolgreich korrigiert und überschrieben.")
+    print("[INFO] headlines.json aktualisiert.")
 
-    except Exception as e:
-        print(f"[CRITICAL] Fehler im Scraper-Prozess: {e}")
 
 if __name__ == "__main__":
     get_latest_news90()
