@@ -2,9 +2,9 @@ name: Auto Update
 
 on:
   schedule:
-    # Triggert den Workflow mehrmals täglich (Beispiel: alle 3 Stunden)
-    - cron: '0 */3 * * *'
-  workflow_dispatch: # Ermöglicht das manuelle Starten über den GitHub-Actions-Tab
+    # Einmal pro Stunde; so werden neue 90-Sekunden-Ausgaben zeitnah übernommen.
+    - cron: '15 * * * *'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -29,10 +29,9 @@ jobs:
       - name: Run Update News 90
         run: python scripts/update_news90.py
 
-      # HIER IST DER REPARIERTE PUSH-SCHRITT MIT REBASE
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add headlines.json news1920.json weather90.json tv_program.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "auto update (news, weather & program)" && git pull --rebase origin main && git push origin main)
+          git add headlines.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "auto update news90" && git pull --rebase origin main && git push origin main)
