@@ -170,6 +170,144 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     justify-content:center;
   }
 }
+
+/* QUIZ DES TAGES */
+.quiz-tile{
+  background:
+    radial-gradient(circle at 78% 22%, rgba(196,0,18,.75), transparent 30%),
+    linear-gradient(135deg,#151515 0%,#2b0005 55%,#76000b 100%);
+}
+.quiz-symbol{
+  position:absolute;
+  left:22px;
+  top:20px;
+  font-size:88px;
+  line-height:1;
+  font-weight:900;
+  opacity:.22;
+}
+.quiz-kicker{
+  position:absolute;
+  top:18px;
+  right:18px;
+  background:rgba(196,0,18,.95);
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.quiz-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  background:rgba(0,0,0,.88);
+  padding:24px;
+}
+.quiz-modal.open{display:flex;align-items:center;justify-content:center}
+.quiz-card{
+  width:min(760px,100%);
+  background:#101010;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  overflow:hidden;
+}
+.quiz-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:22px 24px;
+  background:linear-gradient(90deg,#c40012,#690008);
+}
+.quiz-header h2{font-size:28px;font-weight:900}
+.quiz-close{
+  border:0;
+  background:rgba(0,0,0,.24);
+  color:#fff;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  font-size:28px;
+  font-weight:900;
+  cursor:pointer;
+}
+.quiz-body{padding:26px}
+.quiz-progress{
+  font-size:13px;
+  font-weight:800;
+  opacity:.75;
+  margin-bottom:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.quiz-question{
+  font-size:25px;
+  line-height:1.25;
+  font-weight:900;
+  margin-bottom:22px;
+}
+.quiz-options{
+  display:grid;
+  gap:11px;
+}
+.quiz-option{
+  width:100%;
+  text-align:left;
+  border:1px solid rgba(255,255,255,.15);
+  background:#1d1d1d;
+  color:#fff;
+  padding:15px 16px;
+  border-radius:11px;
+  font-size:17px;
+  font-weight:700;
+  cursor:pointer;
+}
+.quiz-option:hover{background:#292929}
+.quiz-option.correct{background:#145c2e;border-color:#3fa964}
+.quiz-option.wrong{background:#6f101a;border-color:#c40012}
+.quiz-feedback{
+  min-height:46px;
+  margin-top:16px;
+  font-size:15px;
+  line-height:1.4;
+  opacity:.95;
+}
+.quiz-next{
+  display:none;
+  margin-top:16px;
+  border:0;
+  background:#c40012;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+}
+.quiz-result{text-align:center;padding:12px 0 4px}
+.quiz-result .score{
+  font-size:52px;
+  font-weight:900;
+  margin:12px 0 8px;
+}
+.quiz-result p{font-size:18px;line-height:1.45}
+.quiz-restart{
+  margin-top:20px;
+  border:0;
+  background:#c40012;
+  color:#fff;
+  padding:13px 20px;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+
 </style>
 </head>
 
@@ -604,7 +742,6 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
   </a>
 
-
   <!-- BLICKWECHSEL: KNOCHENJOB HÜTTENWIRT -->
   <a class="tile small" id="huettenwirtTile"
      href="https://www.servustv.com/de/page/AA81GB6LQLL09WAKXM8U?cid=3198c6e4-a594-4600-b0aa-415bbf6cda19"
@@ -612,14 +749,54 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
      data-share-url="https://www.servustv.com/de/page/AA81GB6LQLL09WAKXM8U?cid=3198c6e4-a594-4600-b0aa-415bbf6cda19"
      style="background-image:url('huettenwirt.jpg')">
     <div class="tile-actions">
-      <button class="action-btn like-btn" data-like-key="tile-huettenwirt" onclick="toggleLike(event, this)">♡ Like</button>
-      <button class="action-btn" onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
+      <button class="action-btn like-btn" data-like-key="tile-huettenwirt"
+              onclick="toggleLike(event, this)">♡ Like</button>
+      <button class="action-btn"
+              onclick="shareTile(event, this.closest('.tile'))">↗ Teilen</button>
     </div>
     <div class="overlay">
       <h2>Knochenjob: Ein Tag als Hüttenwirt</h2>
       <div class="sub">BLICKWECHSEL. Das Nachrichtenmagazin</div>
     </div>
   </a>
+
+
+
+  <!-- ========================================= -->
+  <!-- NACHRICHTEN-QUIZ DES TAGES -->
+  <!-- ========================================= -->
+
+  <div
+    class="tile small quiz-tile"
+    id="dailyQuizTile"
+    onclick="openDailyQuiz()"
+    style="cursor:pointer;"
+  >
+    <div class="quiz-symbol">?</div>
+    <div class="quiz-kicker">5 Fragen</div>
+
+    <div class="tile-actions">
+      <button
+        class="action-btn like-btn"
+        data-like-key="tile-quiz"
+        onclick="toggleLike(event, this)"
+      >
+        ♡ Like
+      </button>
+
+      <button
+        class="action-btn"
+        onclick="event.preventDefault();event.stopPropagation();openDailyQuiz();"
+      >
+        ▶ Quiz starten
+      </button>
+    </div>
+
+    <div class="overlay">
+      <h2>Nachrichten-Quiz des Tages</h2>
+      <div class="sub">5 Fragen zu Österreich &amp; der Welt</div>
+    </div>
+  </div>
 
 </div>
 </main>
@@ -648,6 +825,21 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
 
 
+
+
+<!-- ========================================= -->
+<!-- QUIZ MODAL -->
+<!-- ========================================= -->
+
+<div class="quiz-modal" id="dailyQuizModal" aria-hidden="true">
+  <div class="quiz-card">
+    <div class="quiz-header">
+      <h2>Nachrichten-Quiz des Tages</h2>
+      <button class="quiz-close" onclick="closeDailyQuiz()" aria-label="Quiz schließen">×</button>
+    </div>
+    <div class="quiz-body" id="dailyQuizBody"></div>
+  </div>
+</div>
 
 <div class="toast" id="toast">
   Link kopiert
@@ -1339,6 +1531,149 @@ window.addEventListener(
 
 initLikes();
 loadTvProgram();
+
+
+
+/* =========================================
+   NACHRICHTEN-QUIZ DES TAGES
+========================================= */
+
+const dailyQuizQuestions = [
+  {
+    question: "Wie stark ist die Stromproduktion in Österreich zuletzt wegen der niedrigen Flusspegel eingebrochen?",
+    options: ["Um rund ein Drittel", "Um rund fünf Prozent", "Um rund die Hälfte", "Sie ist gestiegen"],
+    correct: 0,
+    explanation: "Richtig: Laut ORF ist die Stromproduktion wegen der sehr niedrigen Pegelstände um etwa ein Drittel eingebrochen."
+  },
+  {
+    question: "Worüber stimmt Island am 29. August ab?",
+    options: [
+      "Über die Einführung des Euro",
+      "Über die Wiederaufnahme von EU-Beitrittsgesprächen",
+      "Über den Austritt aus der NATO",
+      "Über ein Verbot der Fischerei"
+    ],
+    correct: 1,
+    explanation: "Richtig: Beim Referendum geht es um die Frage, ob Island die EU-Beitrittsgespräche wieder aufnehmen soll."
+  },
+  {
+    question: "Welcher Sektor war am 19. August an Europas Börsen besonders stark, weil die Ölpreise hoch blieben?",
+    options: ["Medien", "Energie", "Einzelhandel", "Telekommunikation"],
+    correct: 1,
+    explanation: "Richtig: Energieaktien gehörten zu den stärksten Sektoren, gestützt von den hohen Ölpreisen."
+  },
+  {
+    question: "Welche Meerenge steht im Mittelpunkt der Hoffnungen auf eine Wiederöffnung, die zuletzt die Ölpreise bewegten?",
+    options: ["Straße von Gibraltar", "Bosporus", "Straße von Hormuz", "Beringstraße"],
+    correct: 2,
+    explanation: "Richtig: Hoffnungen auf eine Wiederöffnung der Straße von Hormuz beeinflussten die Ölpreise."
+  },
+  {
+    question: "Wie groß war Belgiens größter Waldbrand nach jüngsten Angaben ungefähr?",
+    options: ["300 Hektar", "1.000 Hektar", "3.000 Hektar", "30.000 Hektar"],
+    correct: 2,
+    explanation: "Richtig: Der Brand im Hohen Venn hatte rund 3.000 Hektar erfasst."
+  }
+];
+
+let dailyQuizIndex = 0;
+let dailyQuizScore = 0;
+let dailyQuizLocked = false;
+
+function openDailyQuiz(){
+  dailyQuizIndex = 0;
+  dailyQuizScore = 0;
+  dailyQuizLocked = false;
+  const modal = document.getElementById("dailyQuizModal");
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  renderDailyQuizQuestion();
+}
+
+function closeDailyQuiz(){
+  const modal = document.getElementById("dailyQuizModal");
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function renderDailyQuizQuestion(){
+  const body = document.getElementById("dailyQuizBody");
+  const q = dailyQuizQuestions[dailyQuizIndex];
+  dailyQuizLocked = false;
+
+  body.innerHTML = `
+    <div class="quiz-progress">Frage ${dailyQuizIndex + 1} von ${dailyQuizQuestions.length}</div>
+    <div class="quiz-question">${q.question}</div>
+    <div class="quiz-options">
+      ${q.options.map((option,i)=>`
+        <button class="quiz-option" onclick="answerDailyQuiz(${i},this)">${option}</button>
+      `).join("")}
+    </div>
+    <div class="quiz-feedback" id="dailyQuizFeedback"></div>
+    <button class="quiz-next" id="dailyQuizNext" onclick="nextDailyQuizQuestion()">
+      ${dailyQuizIndex === dailyQuizQuestions.length - 1 ? "Ergebnis anzeigen" : "Nächste Frage"}
+    </button>
+  `;
+}
+
+function answerDailyQuiz(answerIndex,btn){
+  if(dailyQuizLocked) return;
+  dailyQuizLocked = true;
+
+  const q = dailyQuizQuestions[dailyQuizIndex];
+  const buttons = document.querySelectorAll("#dailyQuizBody .quiz-option");
+
+  buttons.forEach((button,i)=>{
+    button.disabled = true;
+    if(i === q.correct) button.classList.add("correct");
+  });
+
+  if(answerIndex === q.correct){
+    dailyQuizScore++;
+  }else{
+    btn.classList.add("wrong");
+  }
+
+  document.getElementById("dailyQuizFeedback").textContent = q.explanation;
+  document.getElementById("dailyQuizNext").style.display = "inline-block";
+}
+
+function nextDailyQuizQuestion(){
+  dailyQuizIndex++;
+
+  if(dailyQuizIndex < dailyQuizQuestions.length){
+    renderDailyQuizQuestion();
+    return;
+  }
+
+  renderDailyQuizResult();
+}
+
+function renderDailyQuizResult(){
+  const body = document.getElementById("dailyQuizBody");
+  let message = "Da geht noch mehr – morgen gibt es eine neue Runde.";
+
+  if(dailyQuizScore === 5) message = "Perfekt – du bist heute bestens informiert.";
+  else if(dailyQuizScore >= 4) message = "Sehr stark – du hast die Nachrichten gut verfolgt.";
+  else if(dailyQuizScore >= 3) message = "Gut informiert – solide Runde.";
+
+  body.innerHTML = `
+    <div class="quiz-result">
+      <div class="quiz-progress">Dein Ergebnis</div>
+      <div class="score">${dailyQuizScore} / ${dailyQuizQuestions.length}</div>
+      <p>${message}</p>
+      <button class="quiz-restart" onclick="openDailyQuiz()">Noch einmal spielen</button>
+    </div>
+  `;
+}
+
+document.getElementById("dailyQuizModal")?.addEventListener("click",function(e){
+  if(e.target === this) closeDailyQuiz();
+});
+
+window.addEventListener("keydown",function(e){
+  if(e.key === "Escape") closeDailyQuiz();
+});
 
 
 /* =========================================
