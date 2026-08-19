@@ -900,7 +900,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
   <a
     class="tile small"
-    id="tochterTile"
+    id="news90Tile"
     href="https://www.servustv.com/de/page/AAQCJAEUU7CWFL0CXXQV?cid=f7c25019-f876-44ee-ab56-02e0d7bd231e"
     target="_blank"
     rel="noopener noreferrer"
@@ -912,7 +912,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
       <button
         class="action-btn like-btn"
-        data-like-key="tile-tochter"
+        data-like-key="tile-news90-auto"
         onclick="toggleLike(event, this)"
       >
         ♡ Like
@@ -928,8 +928,8 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
     </div>
 
     <div class="overlay">
-      <h2>Mann tötet 8-jährige Tochter</h2>
-      <div class="sub">Die Servus Nachrichten in 90 Sekunden</div>
+      <h2 id="news90Headline">Mann tötet 8-jährige Tochter</h2>
+      <div class="sub" id="news90Subline">Die Servus Nachrichten in 90 Sekunden</div>
     </div>
 
   </a>
@@ -1288,6 +1288,51 @@ async function loadHeadlines(){
        Wird absichtlich NICHT aus
        headlines.json geladen.
     ===================================== */
+
+
+    /* =====================================
+       SERVUS NACHRICHTEN IN 90 SEKUNDEN
+       Automatisch aus headlines.json
+    ===================================== */
+
+    const news90Tile =
+      document.getElementById("news90Tile");
+
+    if(news90Tile){
+
+      if(data.news90_link){
+        news90Tile.href = data.news90_link;
+        news90Tile.dataset.shareUrl = data.news90_link;
+      }
+
+      const news90Headline =
+        document.getElementById("news90Headline");
+
+      if(news90Headline && data.news90_title){
+        news90Headline.textContent =
+          String(data.news90_title)
+            .replace(/\s*\|\s*Servus Nachrichten in 90 Sekunden\s*$/i,"")
+            .trim();
+      }
+
+      const news90Subline =
+        document.getElementById("news90Subline");
+
+      if(news90Subline){
+        news90Subline.textContent =
+          "Die Servus Nachrichten in 90 Sekunden";
+      }
+
+      if(data.news90_image){
+        const separator =
+          String(data.news90_image).includes("?")
+            ? "&"
+            : "?";
+
+        news90Tile.style.backgroundImage =
+          `url('${data.news90_image}${separator}cache=${Date.now()}')`;
+      }
+    }
 
 
     /* =====================================
