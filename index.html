@@ -445,7 +445,7 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
   border-radius:12px;
   background:#222;
   display:block;
-  overflow:hidden;
+  object-fit:cover;
 }
 .place-question{
   font-size:22px;
@@ -514,7 +514,6 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 }
 
 </style>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 </head>
 
 <body>
@@ -1132,7 +1131,6 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 </div>
 
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
 
 /* =========================================
@@ -1861,7 +1859,6 @@ function renderDailyQuizQuestion(){
     </button>
   `;
 
-  setTimeout(() => initAustriaMap(place), 0);
 }
 
 function answerDailyQuiz(answerIndex,btn){
@@ -1932,37 +1929,27 @@ window.addEventListener("keydown",function(e){
 const austriaPlaces = [
   {
     name:"Hallstatt",
-    lat:47.5622,
-    lng:13.6493,
-    zoom:15,
+    image:"https://falstaff.b-cdn.net/core/9517191/442951_heritagehotel-hallstatt_9517191.jpg",
     options:["Hallstatt","Bad Aussee","Mondsee"]
   },
   {
     name:"Zell am See",
-    lat:47.3235,
-    lng:12.7969,
-    zoom:14,
+    image:"https://cdn.indebergen.nl/media/ykhiqubm/zellamsee.jpg?anchor=center&format=webp&heightRatio=0.5625&mode=crop&quality=80&width=3000",
     options:["Zell am See","Millstatt","Wörgl"]
   },
   {
     name:"Innsbruck",
-    lat:47.2692,
-    lng:11.4041,
-    zoom:14,
+    image:"https://d2rdhxfof4qmbb.cloudfront.net/wp-content/uploads/20180221134637/iStock-539009044.jpg",
     options:["Innsbruck","Bludenz","Lienz"]
   },
   {
     name:"Salzburg",
-    lat:47.8095,
-    lng:13.0550,
-    zoom:14,
+    image:"https://www.markus-sittikus.at/wp-content/uploads/2016/03/Salzburg-Stadt-Panorama_1920.jpg",
     options:["Salzburg","Steyr","Kufstein"]
   },
   {
     name:"Klagenfurt",
-    lat:46.6247,
-    lng:14.3053,
-    zoom:14,
+    image:"https://content.r9cdn.net/rimg/dimg/5e/91/149751ae-city-25114-172c157af7c.jpg?crop=true&height=768&watermarkposition=lowerright&width=1366&xhint=2929&yhint=1917",
     options:["Klagenfurt","Graz","Bregenz"]
   }
 ];
@@ -1970,37 +1957,6 @@ const austriaPlaces = [
 let austriaQuizIndex = 0;
 let austriaQuizScore = 0;
 let austriaQuizLocked = false;
-let austriaMap = null;
-
-function initAustriaMap(place){
-  if(austriaMap){
-    austriaMap.remove();
-    austriaMap = null;
-  }
-
-  austriaMap = L.map("austriaMap", {
-    zoomControl:false,
-    attributionControl:true,
-    dragging:false,
-    scrollWheelZoom:false,
-    doubleClickZoom:false,
-    boxZoom:false,
-    keyboard:false,
-    tap:false
-  });
-
-  austriaMap.setView([place.lat, place.lng], place.zoom);
-
-  L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    {
-      maxZoom:19,
-      attribution:"Tiles © Esri"
-    }
-  ).addTo(austriaMap);
-
-  setTimeout(() => austriaMap.invalidateSize(), 50);
-}
 
 function openAustriaQuiz(){
   austriaQuizIndex = 0;
@@ -2017,11 +1973,6 @@ function closeAustriaQuiz(){
   const modal = document.getElementById("austriaQuizModal");
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden","true");
-
-  if(austriaMap){
-    austriaMap.remove();
-    austriaMap = null;
-  }
 }
 
 function renderAustriaPlace(){
@@ -2032,12 +1983,11 @@ function renderAustriaPlace(){
   body.innerHTML = `
     <div class="place-progress">Ort ${austriaQuizIndex + 1} von ${austriaPlaces.length}</div>
 
-    <div
+    <img
       class="place-map"
-      id="austriaMap"
-      role="img"
-      aria-label="Satellitenbild eines österreichischen Ortes ohne Ortsnamen"
-    ></div>
+      src="${place.image}"
+      alt="Stadtansicht für das Österreich-Quiz"
+    >
 
     <div class="place-question">Welcher Ort ist hier zu sehen?</div>
 
@@ -2101,11 +2051,6 @@ function nextAustriaPlace(){
 }
 
 function renderAustriaResult(){
-  if(austriaMap){
-    austriaMap.remove();
-    austriaMap = null;
-  }
-
   const body = document.getElementById("austriaQuizBody");
   let message = "Da geht noch mehr – probier es gleich noch einmal.";
 
