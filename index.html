@@ -516,6 +516,53 @@ body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
 
   </a>
 
+
+  <!-- ========================================= -->
+  <!-- ARD-INSIDER / BLICKWECHSEL -->
+  <!-- ========================================= -->
+
+  <div
+    class="tile small"
+    id="tagesschauTile"
+    data-share-url="https://www.servustv.com/de/page/AA2UKMDF1AGZWQYXPZLT?cid=28d689af-76c0-4f70-ad57-8855e2f7f123"
+    style="background-image:url('tagesschau.jpg');cursor:pointer;"
+    onclick="window.open('https://www.servustv.com/de/page/AA2UKMDF1AGZWQYXPZLT?cid=28d689af-76c0-4f70-ad57-8855e2f7f123','_blank')"
+  >
+
+    <div class="tile-actions">
+
+      <button
+        class="action-btn like-btn"
+        data-like-key="tile-tagesschau"
+        onclick="toggleLike(event, this)"
+      >
+        ♡ Like
+      </button>
+
+      <button
+        class="action-btn"
+        onclick="shareTile(event, this.closest('.tile'))"
+      >
+        ↗ Teilen
+      </button>
+
+    </div>
+
+    <div class="overlay">
+      <h2>ARD-Insider packt aus: So links ist die Tagesschau</h2>
+      <div class="sub">
+        <a
+          href="https://www.servustv.com/page/AAA5DAINFI1MSTNEMF9L?cid=28d689af-76c0-4f70-ad57-8855e2f7f123"
+          target="_blank"
+          rel="noopener noreferrer"
+          onclick="event.stopPropagation();"
+          style="color:#fff;text-decoration:none;"
+        >BLICKWECHSEL. Das Nachrichtenmagazin</a>
+      </div>
+    </div>
+
+  </div>
+
 </div>
 </main>
 
