@@ -1,158 +1,226 @@
 import json
 import re
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote, urljoin, urlparse
 
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
-SERIES_ID = "AA-1Y5RJCD1H2111"
-KNOWN_ID = "AAUUYP6RNA3IVBL8FFPC"
-KNOWN_TITLE = "Massive Explosion: Großeinsatz in NÖ"
-SERIES_URL = f"https://www.servustv.com/de/page/{SERIES_ID}"
+QUERY = "Servus Nachrichten in 90 Sekunden"
+SEARCH_URL = f"https://www.servustv.com/de/search?query={quote(QUERY)}"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36",
 }
 
 
-def one_line(text, limit=1200):
-    text = re.sub(r"\s+", " ", text or "")
-    return text[:limit]
+def load_existing_data():
+    try:
+        return json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
 
 
-def around(text, needle, radius=500):
-    low = text.lower()
-    pos = low.find(needle.lower())
-    if pos < 0:
+def normalize_article_url(url):
+    if not url:
         return ""
-    start = max(0, pos - radius)
-    end = min(len(text), pos + len(needle) + radius)
-    return one_line(text[start:end], 1400)
+    parsed = urlparse(urljoin("https://www.servustv.com", url))
+    if parsed.netloc not in {"www.servustv.com", "servustv.com"}:
+        return ""
+    path = parsed.path.rstrip("/")
+    # Nur echte Beitragsseiten, keine Such-/Serienseiten.
+    if not re.fullmatch(r"/de/page/[A-Z0-9-]+(?:/[^?#]+)?", path, flags=re.I):
+        return ""
+    return f"https://www.servustv.com{path}"
 
 
-def interesting_domain(url):
-    host = (urlparse(url).netloc or "").lower()
-    return (
-        host.endswith("servustv.com")
-        or host.endswith("redbull.com")
-        or host.endswith("redbull.tv")
-    )
+def read_meta(page, selector):
+    try:
+        loc = page.locator(selector).first
+        if loc.count():
+            return loc.get_attribute("content") or ""
+    except Exception:
+        pass
+    return ""
 
 
-def get_latest_news90():
-    print("[INFO] Tiefendiagnose der echten ServusTV-Datenquelle.")
-    print(f"[INFO] Kontrollbeitrag: {KNOWN_TITLE} ({KNOWN_ID})")
-    print(f"[INFO] Öffne: {SERIES_URL}")
+def get_title_and_image(page):
+    title = ""
 
-    requests_seen = []
-    responses_seen = []
-    hits = []
+    # Auf den Beitragsseiten ist die eigentliche sichtbare Headline meist H1/H2.
+    for selector in ("h1", "h2"):
+        try:
+            loc = page.locator(selector)
+            for i in range(min(loc.count(), 8)):
+                txt = " ".join((loc.nth(i).inner_text() or "").split())
+                low = txt.lower()
+                if not txt:
+                    continue
+                if low in {
+                    "servus nachrichten in 90 sekunden",
+                    "servus nachrichten: einzelbeiträge",
+                    "servustv on",
+                }:
+                    continue
+                if low.startswith("servus nachrichten:"):
+                    continue
+                title = txt
+                break
+        except Exception:
+            pass
+        if title:
+            break
 
+    if not title:
+        og = read_meta(page, 'meta[property="og:title"]')
+        if og:
+            title = re.sub(
+                r"\s*\|\s*(Servus )?Nachrichten in 90 Sekunden.*$",
+                "",
+                og,
+                flags=re.I,
+            ).strip()
+
+    image = read_meta(page, 'meta[property="og:image"]')
+    if not image:
+        image = read_meta(page, 'meta[name="twitter:image"]')
+
+    return title, image
+
+
+def find_latest_via_search(page):
+    print(f"[INFO] Öffne ServusTV-Suche: {SEARCH_URL}")
+    page.goto(SEARCH_URL, wait_until="domcontentloaded", timeout=60000)
+    page.wait_for_timeout(5000)
+
+    # Consent schließen, falls vorhanden.
+    for label in ("Alle akzeptieren", "Akzeptieren", "Zustimmen"):
+        try:
+            button = page.get_by_role("button", name=re.compile(label, re.I))
+            if button.count() and button.first.is_visible():
+                button.first.click(timeout=1500)
+                page.wait_for_timeout(1200)
+                break
+        except Exception:
+            pass
+
+    # Suchresultate lazy laden.
+    for _ in range(5):
+        page.mouse.wheel(0, 1000)
+        page.wait_for_timeout(600)
+
+    links = page.locator("a[href]")
+    candidates = []
+
+    for i in range(links.count()):
+        a = links.nth(i)
+        try:
+            if not a.is_visible():
+                continue
+            href = normalize_article_url(a.get_attribute("href") or "")
+            if not href:
+                continue
+
+            # Nicht nur Anchor-Text prüfen, sondern den umgebenden Kartencontainer.
+            info = a.evaluate(
+                """el => {
+                    let n = el;
+                    for (let i=0; i<8 && n; i++, n=n.parentElement) {
+                        const txt = (n.innerText || '').trim();
+                        const r = n.getBoundingClientRect();
+                        if (txt.length > 20 && r.width > 200 && r.height > 80) {
+                            return {text: txt, x:r.left, y:r.top + window.scrollY};
+                        }
+                    }
+                    return {text:(el.innerText||'').trim(), x:0, y:0};
+                }"""
+            )
+            text = " ".join((info.get("text") or "").split())
+            low = text.lower()
+
+            if "servus nachrichten in 90 sekunden" not in low and "nachrichten in 90 sekunden" not in low:
+                continue
+
+            if href not in [x[2] for x in candidates]:
+                candidates.append((info.get("y", 10**9), info.get("x", 10**9), href, text))
+        except Exception:
+            continue
+
+    # Die ServusTV-Suche ist chronologisch sortiert; erstes sichtbares Resultat = neuestes.
+    candidates.sort(key=lambda x: (x[0], x[1]))
+
+    print(f"[INFO] {len(candidates)} passende 90-Sekunden-Suchergebnisse gefunden.")
+    for idx, (_, _, href, text) in enumerate(candidates[:8], 1):
+        print(f"[KANDIDAT {idx}] {href} | {text[:180]}")
+
+    if not candidates:
+        return ""
+
+    return candidates[0][2]
+
+
+def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
             locale="de-AT",
             user_agent=HEADERS["User-Agent"],
-            viewport={"width": 1600, "height": 1400},
+            viewport={"width": 1440, "height": 1200},
         )
         page = context.new_page()
 
-        def on_request(req):
-            try:
-                if not interesting_domain(req.url):
-                    return
-                low = req.url.lower()
-                if any(k in low for k in ("api", "dynamic", "product", "collection", "rail", "playlist", "page", "_rsc")):
-                    requests_seen.append((req.method, req.url, req.post_data or ""))
-            except Exception:
-                pass
+        article_url = find_latest_via_search(page)
+        if not article_url:
+            print("[WARNUNG] Kein 90-Sekunden-Beitrag über die ServusTV-Suche gefunden.")
+            print("[WARNUNG] Bestehende news90-Daten bleiben unverändert.")
+            browser.close()
+            return
 
-        def on_response(resp):
-            try:
-                if not interesting_domain(resp.url):
-                    return
-                ctype = (resp.headers.get("content-type") or "").lower()
-                if not any(k in ctype for k in ("json", "text", "javascript", "x-component")):
-                    return
+        print(f"[INFO] Öffne neuesten Suchtreffer: {article_url}")
+        page.goto(article_url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(2500)
 
-                body = resp.text()
-                responses_seen.append((resp.status, resp.url, ctype, len(body)))
-                low = body.lower()
+        body_text = " ".join(page.locator("body").inner_text(timeout=5000).split())
+        if "servus nachrichten in 90 sekunden" not in body_text.lower():
+            print("[WARNUNG] Suchtreffer ist kein bestätigter 90-Sekunden-Beitrag.")
+            print("[WARNUNG] Bestehende Daten bleiben unverändert.")
+            browser.close()
+            return
 
-                matched = []
-                for needle in (KNOWN_ID, "massive explosion", "90 sekunden", "servus nachrichten in 90 sekunden"):
-                    if needle.lower() in low:
-                        matched.append(needle)
+        title, image = get_title_and_image(page)
+        if not title:
+            print("[WARNUNG] Keine belastbare Headline auf dem neuesten Suchtreffer gefunden.")
+            browser.close()
+            return
 
-                if matched:
-                    snippets = []
-                    for needle in matched[:3]:
-                        snip = around(body, needle)
-                        if snip:
-                            snippets.append(f"{needle}: {snip}")
-                    hits.append((resp.url, ctype, matched, snippets))
-            except Exception:
-                pass
+        data = load_existing_data()
+        old_link = data.get("news90_link", "")
+        old_title = data.get("news90_title", "")
 
-        page.on("request", on_request)
-        page.on("response", on_response)
+        data["news90_title"] = title
+        data["news90_link"] = article_url
+        if image:
+            data["news90_image"] = image
+            data["news90_thumbnail"] = image
 
-        page.goto(SERIES_URL, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(5000)
+        JSON_PATH.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
 
-        for label in ("Alle akzeptieren", "Akzeptieren", "Zustimmen"):
-            try:
-                btn = page.get_by_role("button", name=re.compile(label, re.I))
-                if btn.count() and btn.first.is_visible():
-                    btn.first.click(timeout=1500)
-                    page.wait_for_timeout(1200)
-                    break
-            except Exception:
-                pass
+        print(f"[ERFOLG] Aktuellster 90-Sekunden-Beitrag: {title}")
+        print(f"[ERFOLG] Link: {article_url}")
+        if image:
+            print(f"[ERFOLG] Bild: {image}")
 
-        # Lazy-loading und weitere Rails/Karten auslösen.
-        for _ in range(14):
-            page.mouse.wheel(0, 1000)
-            page.wait_for_timeout(700)
-            try:
-                more = page.get_by_text(re.compile(r"Mehr Einträge anzeigen|Mehr anzeigen", re.I))
-                if more.count() and more.first.is_visible():
-                    more.first.click(timeout=1800)
-                    page.wait_for_timeout(1200)
-            except Exception:
-                pass
+        if old_link == article_url and old_title == title:
+            print("[INFO] Beitrag unverändert.")
+        else:
+            print("[INFO] Neuer Beitrag erkannt; headlines.json aktualisiert.")
 
-        page.wait_for_timeout(3500)
-
-        print(f"[DIAG] Relevante Requests: {len(requests_seen)}")
-        for i, (method, url, post) in enumerate(requests_seen[:80], 1):
-            print(f"[REQUEST {i}] {method} {url}")
-            if post:
-                print(f"[REQUEST {i}] POST: {one_line(post, 900)}")
-
-        print(f"[DIAG] Relevante Responses: {len(responses_seen)}")
-        for i, (status, url, ctype, size) in enumerate(responses_seen[:80], 1):
-            print(f"[RESPONSE {i}] HTTP {status} | {size} Zeichen | {ctype} | {url}")
-
-        print(f"[DIAG] Inhaltstreffer: {len(hits)}")
-        for i, (url, ctype, matched, snippets) in enumerate(hits[:30], 1):
-            print(f"[TREFFER {i}] Quelle: {url}")
-            print(f"[TREFFER {i}] Content-Type: {ctype}")
-            print(f"[TREFFER {i}] Gefunden: {' | '.join(matched)}")
-            for snip in snippets:
-                print(f"[TREFFER {i}] Ausschnitt: {snip}")
-
-        html = page.content()
-        body_text = page.locator("body").inner_text(timeout=5000)
-        print(f"[DOM] Bekannte ID vorhanden: {KNOWN_ID.lower() in html.lower()}")
-        print(f"[DOM] Massive Explosion vorhanden: {'massive explosion' in body_text.lower()}")
-        print(f"[DOM] 90 Sekunden vorhanden: {'90 sekunden' in body_text.lower()}")
-
-        print("[INFO] Diagnose abgeschlossen; headlines.json bleibt unverändert.")
         browser.close()
 
 
 if __name__ == "__main__":
-    get_latest_news90()
+    main()
