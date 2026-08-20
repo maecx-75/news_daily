@@ -3,36 +3,33 @@ import re
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
-import requests
-from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
-
-# Nur diese Servus-Nachrichten-Unterseite wird als Quelle verwendet.
 SERIES_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 SERIES_ID = "AA-1Y5RJCD1H2111"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36",
-    "Accept-Language": "de-AT,de;q=0.9,en;q=0.7",
 }
 
 
 def clean_title(text):
     text = " ".join((text or "").split())
-    text = re.sub(
-        r"\s*\|\s*(Servus )?Nachrichten in 90 Sekunden.*$",
-        "",
-        text,
-        flags=re.I,
-    )
+    text = re.sub(r"\s*\|\s*(Servus )?Nachrichten in 90 Sekunden.*$", "", text, flags=re.I)
     text = re.sub(r"\s*-\s*ServusTV On\s*$", "", text, flags=re.I)
     return text.strip()
 
 
-def normalize_candidate(url):
+def load_existing_data():
+    try:
+        return json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def normalize_article_url(url):
     if not url:
         return ""
     parsed = urlparse(urljoin(SERIES_URL, url))
@@ -46,227 +43,266 @@ def normalize_candidate(url):
     return f"https://www.servustv.com{path}"
 
 
-def discover_with_browser():
-    print(f"[INFO] Öffne ausschließlich Servus-Nachrichten-Unterseite: {SERIES_URL}")
+def read_meta(page, selector, attr="content"):
+    try:
+        loc = page.locator(selector).first
+        if loc.count():
+            return loc.get_attribute(attr) or ""
+    except Exception:
+        pass
+    return ""
+
+
+def title_from_page(page):
     candidates = []
+
+    for selector in ("h1", "h2"):
+        try:
+            loc = page.locator(selector)
+            for i in range(min(loc.count(), 10)):
+                txt = " ".join((loc.nth(i).inner_text() or "").split())
+                if txt:
+                    candidates.append(txt)
+        except Exception:
+            pass
+
+    for selector in ('meta[property="og:title"]', 'meta[name="twitter:title"]'):
+        value = read_meta(page, selector)
+        if value:
+            candidates.append(value)
+
+    try:
+        if page.title():
+            candidates.append(page.title())
+    except Exception:
+        pass
+
+    generic = {
+        "servus nachrichten in 90 sekunden",
+        "servus nachrichten: einzelbeiträge",
+        "servus nachrichten: aktuelle meldungen und videos",
+        "servustv on",
+    }
+
+    for value in candidates:
+        cleaned = clean_title(value)
+        low = cleaned.lower()
+        if not cleaned or low in generic or low.startswith("servus nachrichten:"):
+            continue
+        return cleaned
+
+    return ""
+
+
+def image_from_page(page):
+    for selector in ('meta[property="og:image"]', 'meta[name="twitter:image"]'):
+        value = read_meta(page, selector)
+        if value:
+            return urljoin(page.url, value)
+    return ""
+
+
+def find_first_news90_card(page):
+    """
+    ServusTV rendert die Karten dynamisch und die Karten sind nicht immer normale Links.
+    Deshalb suchen wir die sichtbare Rubrik 'Servus Nachrichten in 90 Sekunden' und
+    nehmen die erste große Bildkarte direkt darunter. Das entspricht der linken,
+    neuesten Karte in der Rubrik.
+    """
+
+    heading = None
+
+    # Zuerst echte Überschriften probieren.
+    for selector in ("h1", "h2", "h3", "h4"):
+        try:
+            loc = page.locator(selector).filter(
+                has_text=re.compile(r"^\s*Servus Nachrichten in 90 Sekunden\s*$", re.I)
+            )
+            if loc.count():
+                heading = loc.first
+                break
+        except Exception:
+            pass
+
+    # Fallback: exakter sichtbarer Text.
+    if heading is None:
+        try:
+            loc = page.get_by_text("Servus Nachrichten in 90 Sekunden", exact=True)
+            if loc.count():
+                heading = loc.first
+        except Exception:
+            pass
+
+    if heading is None:
+        raise RuntimeError("Rubrik 'Servus Nachrichten in 90 Sekunden' nicht gefunden.")
+
+    heading.scroll_into_view_if_needed()
+    page.wait_for_timeout(1200)
+
+    hbox = heading.bounding_box()
+    if not hbox:
+        raise RuntimeError("Position der 90-Sekunden-Rubrik konnte nicht bestimmt werden.")
+
+    heading_bottom = hbox["y"] + hbox["height"]
+    print(f"[INFO] 90-Sekunden-Rubrik gefunden bei y={hbox['y']:.0f}")
+
+    images = page.locator("img")
+    found = []
+
+    for i in range(images.count()):
+        img = images.nth(i)
+        try:
+            box = img.bounding_box()
+            if not box:
+                continue
+            if box["width"] < 220 or box["height"] < 110:
+                continue
+            # Nur Bilder in den ersten ca. 650 px unter der Rubriküberschrift.
+            if box["y"] < heading_bottom - 10:
+                continue
+            if box["y"] > heading_bottom + 650:
+                continue
+            found.append((box["y"], box["x"], img, box))
+        except Exception:
+            continue
+
+    if not found:
+        raise RuntimeError("Keine sichtbare Beitragskarte unter der 90-Sekunden-Rubrik gefunden.")
+
+    # Oberste Reihe, darin ganz links = neuester Beitrag.
+    found.sort(key=lambda item: (round(item[0] / 40), item[1]))
+    y, x, img, box = found[0]
+    print(f"[INFO] Erste sichtbare 90-Sekunden-Karte bei x={x:.0f}, y={y:.0f}")
+
+    # Falls doch ein Anchor im Elternbaum steckt, direkt verwenden.
+    try:
+        href = img.evaluate(
+            """el => {
+                let n = el;
+                for (let i=0; i<10 && n; i++, n=n.parentElement) {
+                    if (n.tagName === 'A' && n.href) return n.href;
+                    const a = n.querySelector && n.querySelector('a[href]');
+                    if (a && a.href) return a.href;
+                }
+                return '';
+            }"""
+        )
+        href = normalize_article_url(href)
+        if href:
+            print(f"[INFO] Link direkt an der ersten Karte gefunden: {href}")
+            return href
+    except Exception:
+        pass
+
+    # Bei ServusTV ist die Karte teils per JavaScript klickbar. Dann klicken wir
+    # tatsächlich auf die erste Bildkarte und lesen die Ziel-URL aus.
+    old_url = page.url
+    try:
+        img.click(timeout=5000, force=True)
+    except Exception:
+        page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+
+    page.wait_for_timeout(4000)
+
+    # Falls ein neuer Tab/Fenster geöffnet wurde, diesen verwenden.
+    if len(page.context.pages) > 1:
+        newest = page.context.pages[-1]
+        newest.wait_for_load_state("domcontentloaded", timeout=15000)
+        href = normalize_article_url(newest.url)
+        if href:
+            return href
+
+    href = normalize_article_url(page.url)
+    if href and page.url != old_url:
+        print(f"[INFO] Ziel nach Klick: {href}")
+        return href
+
+    raise RuntimeError("Erste 90-Sekunden-Karte konnte nicht geöffnet werden.")
+
+
+def get_latest_news90():
+    print(f"[INFO] Öffne Servus-Nachrichten-Seite: {SERIES_URL}")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
             locale="de-AT",
             user_agent=HEADERS["User-Agent"],
-            viewport={"width": 1440, "height": 1800},
+            viewport={"width": 1440, "height": 1100},
         )
         page = context.new_page()
-
         page.goto(SERIES_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(5000)
 
+        # Consent-Dialog schließen, falls vorhanden.
         for label in ("Alle akzeptieren", "Akzeptieren", "Zustimmen"):
             try:
                 button = page.get_by_role("button", name=re.compile(label, re.I))
                 if button.count() and button.first.is_visible():
                     button.first.click(timeout=1500)
-                    page.wait_for_timeout(1200)
+                    page.wait_for_timeout(1000)
                     break
             except Exception:
                 pass
 
-        # Seite etwas nachladen, aber nur den Bereich Einzelbeiträge auswerten.
-        for _ in range(5):
-            page.mouse.wheel(0, 2200)
-            page.wait_for_timeout(1000)
+        # Langsam nach unten scrollen, damit die Rubrik wirklich gerendert wird.
+        for _ in range(8):
             try:
-                more = page.get_by_text(re.compile(r"Mehr Einträge anzeigen|Mehr anzeigen", re.I))
-                if more.count() and more.first.is_visible():
-                    more.first.click(timeout=2000)
-                    page.wait_for_timeout(1600)
+                exact = page.get_by_text("Servus Nachrichten in 90 Sekunden", exact=True)
+                if exact.count() and exact.first.is_visible():
+                    break
             except Exception:
                 pass
+            page.mouse.wheel(0, 900)
+            page.wait_for_timeout(700)
 
-        print(f"[INFO] Gerenderter Seitentext: {len(page.locator('body').inner_text(timeout=5000))} Zeichen")
-
-        # Sichtbaren Bereich zwischen 'Einzelbeiträge' und dem nächsten großen Abschnitt bestimmen.
-        start_y = None
-        end_y = None
         try:
-            heading = page.get_by_text(re.compile(r"Servus Nachrichten:\s*Einzelbeiträge", re.I)).first
-            box = heading.bounding_box()
-            if box:
-                start_y = box["y"]
-                print(f"[INFO] Einzelbeiträge-Bereich beginnt bei y={start_y:.0f}")
-        except Exception:
-            pass
-
-        for pattern in (r"Das könnte Ihnen auch gefallen", r"Mehr zu:\s*Servus Nachrichten"):
-            try:
-                h = page.get_by_text(re.compile(pattern, re.I)).first
-                box = h.bounding_box()
-                if box:
-                    if end_y is None or box["y"] < end_y:
-                        end_y = box["y"]
-            except Exception:
-                pass
-
-        if end_y is not None:
-            print(f"[INFO] Einzelbeiträge-Bereich endet bei y={end_y:.0f}")
-
-        links = page.locator("a[href]").evaluate_all(
-            """els => els.map(a => {
-                const r = a.getBoundingClientRect();
-                return {
-                    href: a.href,
-                    text: (a.innerText || '').trim(),
-                    y: r.top + window.scrollY,
-                    visible: !!(r.width && r.height)
-                };
-            })"""
-        )
-
-        # Zuerst nur echte Links innerhalb des Einzelbeiträge-Bereichs.
-        scoped = []
-        for item in links:
-            href = normalize_candidate(item.get("href"))
-            if not href or not item.get("visible"):
-                continue
-            y = item.get("y")
-            if start_y is not None and y is not None and y < start_y:
-                continue
-            if end_y is not None and y is not None and y >= end_y:
-                continue
-            scoped.append((y if y is not None else 10**9, href, item.get("text") or ""))
-
-        scoped.sort(key=lambda x: x[0])
-        for _, href, txt in scoped:
-            if href not in candidates:
-                candidates.append(href)
-                print(f"[KANDIDAT] {href} | {txt[:120]}")
-
-        # Fallback: falls die Layout-Grenzen nicht greifen, nur Links mit 90-Sekunden-Text nehmen.
-        if not candidates:
-            print("[WARNUNG] Keine Bereichs-Kandidaten gefunden; verwende 90-Sekunden-Text-Fallback.")
-            for item in links:
-                txt = (item.get("text") or "").lower()
-                if "90 sekunden" not in txt:
-                    continue
-                href = normalize_candidate(item.get("href"))
-                if href and href not in candidates:
-                    candidates.append(href)
-                    print(f"[KANDIDAT] {href} | {item.get('text','')[:120]}")
-
-        browser.close()
-
-    print(f"[INFO] {len(candidates)} echte Beitragskandidaten im Einzelbeiträge-Bereich gefunden.")
-    return candidates
-
-
-def extract_article_data(article_url):
-    r = requests.get(article_url, headers=HEADERS, timeout=30)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    page_text = " ".join(soup.get_text(" ", strip=True).split())
-
-    title_candidates = []
-    for tag in ("h1", "h2"):
-        for node in soup.find_all(tag):
-            value = " ".join(node.get_text(" ", strip=True).split())
-            if value:
-                title_candidates.append(value)
-
-    for attrs in ({"property": "og:title"}, {"name": "twitter:title"}):
-        meta = soup.find("meta", attrs=attrs)
-        if meta and meta.get("content"):
-            title_candidates.append(meta["content"])
-
-    if soup.title:
-        title_candidates.append(soup.title.get_text(" ", strip=True))
-
-    full_title = " ".join(x for x in title_candidates if x)
-    joined = (page_text + " " + full_title).lower()
-    is_news90 = "servus nachrichten in 90 sekunden" in joined or "nachrichten in 90 sekunden" in joined
-
-    generic_titles = {
-        "servus nachrichten in 90 sekunden",
-        "nachrichten in 90 sekunden",
-        "servus nachrichten: einzelbeiträge",
-        "servus nachrichten: aktuelle meldungen und videos",
-        "servus nachrichten: aktuelle meldungen und videos - servustv on",
-        "servustv on",
-    }
-
-    title = ""
-    for candidate in title_candidates:
-        cleaned = clean_title(candidate)
-        low = cleaned.lower()
-        if not cleaned or low in generic_titles:
-            continue
-        # Keine Seiten-/Rubriküberschrift als Headline akzeptieren.
-        if low.startswith("servus nachrichten:"):
-            continue
-        title = cleaned
-        break
-
-    image = ""
-    for attrs in ({"property": "og:image"}, {"name": "twitter:image"}):
-        meta = soup.find("meta", attrs=attrs)
-        if meta and meta.get("content"):
-            image = urljoin(article_url, meta["content"])
-            break
-
-    return title, image, is_news90
-
-
-def load_existing_data():
-    try:
-        return json.loads(JSON_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-
-
-def get_latest_news90():
-    try:
-        candidates = discover_with_browser()
-    except Exception as exc:
-        print(f"[WARNUNG] Browser-Suche fehlgeschlagen: {exc}")
-        candidates = []
-
-    for index, href in enumerate(candidates[:40], 1):
-        try:
-            print(f"[INFO] Prüfe Kandidat {index}: {href}")
-            title, image, is_news90 = extract_article_data(href)
-
-            if not is_news90:
-                print("[INFO] Übersprungen: kein bestätigter 90-Sekunden-Beitrag.")
-                continue
-            if not title:
-                print("[INFO] Übersprungen: nur generische Rubrik-/Seitentitel gefunden.")
-                continue
-
-            data = load_existing_data()
-            data["news90_title"] = title
-            data["news90_link"] = href
-            if image:
-                data["news90_image"] = image
-                data["news90_thumbnail"] = image
-
-            JSON_PATH.write_text(
-                json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
-
-            print(f"[ERFOLG] Neuester 90-Sekunden-Beitrag: {title}")
-            print(f"[ERFOLG] Link: {href}")
-            if image:
-                print(f"[ERFOLG] Bild: {image}")
-            print("[INFO] headlines.json aktualisiert.")
+            article_url = find_first_news90_card(page)
+        except Exception as exc:
+            browser.close()
+            print(f"[WARNUNG] {exc}")
+            print("[WARNUNG] Bestehende news90-Daten bleiben unverändert.")
             return
 
-        except Exception as exc:
-            print(f"[WARNUNG] Kandidat konnte nicht verarbeitet werden: {exc}")
+        # Zielseite direkt öffnen, damit Titel und Bild sauber ausgelesen werden.
+        page.goto(article_url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(2500)
 
-    print("[WARNUNG] Kein bestätigter 90-Sekunden-Beitrag im Einzelbeiträge-Bereich gefunden.")
-    print("[WARNUNG] Bestehende news90-Daten bleiben unverändert.")
+        title = title_from_page(page)
+        image = image_from_page(page)
+
+        if not title:
+            browser.close()
+            print("[WARNUNG] Auf der Zielseite keine belastbare Headline gefunden.")
+            print("[WARNUNG] Bestehende news90-Daten bleiben unverändert.")
+            return
+
+        data = load_existing_data()
+        old_link = data.get("news90_link", "")
+        old_title = data.get("news90_title", "")
+
+        data["news90_title"] = title
+        data["news90_link"] = article_url
+        if image:
+            data["news90_image"] = image
+            data["news90_thumbnail"] = image
+
+        JSON_PATH.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        print(f"[ERFOLG] Aktuellster sichtbarer 90-Sekunden-Beitrag: {title}")
+        print(f"[ERFOLG] Link: {article_url}")
+        if image:
+            print(f"[ERFOLG] Bild: {image}")
+
+        if old_link == article_url and old_title == title:
+            print("[INFO] Beitrag ist unverändert; kein inhaltliches Update nötig.")
+        else:
+            print("[INFO] Neuer Beitrag erkannt; headlines.json aktualisiert.")
+
+        browser.close()
 
 
 if __name__ == "__main__":
