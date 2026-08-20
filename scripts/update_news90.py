@@ -103,16 +103,15 @@ def image_from_page(page):
 
 
 def find_first_news90_card(page):
-    """
-    ServusTV rendert die Karten dynamisch und die Karten sind nicht immer normale Links.
-    Deshalb suchen wir die sichtbare Rubrik 'Servus Nachrichten in 90 Sekunden' und
-    nehmen die erste große Bildkarte direkt darunter. Das entspricht der linken,
-    neuesten Karte in der Rubrik.
+    """Findet innerhalb der Rubrik die oberste Reihe und darin die linke Karte.
+
+    Wichtig: Wir orientieren uns nicht mehr am ersten großen <img>, weil ServusTV
+    intern Bilder/Slides klonen kann. Stattdessen nehmen wir die wiederholte
+    Unterzeile 'Servus Nachrichten in 90 Sekunden' unter den Karten. So lässt
+    sich die tatsächlich sichtbare linke Karte eindeutig bestimmen.
     """
 
     heading = None
-
-    # Zuerst echte Überschriften probieren.
     for selector in ("h1", "h2", "h3", "h4"):
         try:
             loc = page.locator(selector).filter(
@@ -124,7 +123,6 @@ def find_first_news90_card(page):
         except Exception:
             pass
 
-    # Fallback: exakter sichtbarer Text.
     if heading is None:
         try:
             loc = page.get_by_text("Servus Nachrichten in 90 Sekunden", exact=True)
@@ -138,7 +136,6 @@ def find_first_news90_card(page):
 
     heading.scroll_into_view_if_needed()
     page.wait_for_timeout(1200)
-
     hbox = heading.bounding_box()
     if not hbox:
         raise RuntimeError("Position der 90-Sekunden-Rubrik konnte nicht bestimmt werden.")
@@ -146,70 +143,92 @@ def find_first_news90_card(page):
     heading_bottom = hbox["y"] + hbox["height"]
     print(f"[INFO] 90-Sekunden-Rubrik gefunden bei y={hbox['y']:.0f}")
 
-    images = page.locator("img")
-    found = []
+    # Alle exakten Vorkommen des Rubriknamens suchen. Das erste ist die Überschrift,
+    # die weiteren sichtbaren Vorkommen sind die Unterzeilen der Karten.
+    labels = page.get_by_text("Servus Nachrichten in 90 Sekunden", exact=True)
+    cards = []
 
-    for i in range(images.count()):
-        img = images.nth(i)
+    for i in range(labels.count()):
+        label = labels.nth(i)
         try:
-            box = img.bounding_box()
+            box = label.bounding_box()
             if not box:
                 continue
-            if box["width"] < 220 or box["height"] < 110:
+            if box["y"] <= heading_bottom + 20:
                 continue
-            # Nur Bilder in den ersten ca. 650 px unter der Rubriküberschrift.
-            if box["y"] < heading_bottom - 10:
+            if box["y"] > heading_bottom + 750:
                 continue
-            if box["y"] > heading_bottom + 650:
+
+            info = label.evaluate(
+                """el => {
+                    let n = el;
+                    let best = null;
+                    for (let i = 0; i < 10 && n; i++, n = n.parentElement) {
+                        const r = n.getBoundingClientRect();
+                        const txt = (n.innerText || '').trim();
+                        const href = n.href || (n.querySelector && n.querySelector('a[href]') ? n.querySelector('a[href]').href : '');
+                        if (r.width >= 250 && r.height >= 180 && txt.length >= 20) {
+                            best = {x:r.left, y:r.top, w:r.width, h:r.height, text:txt, href:href};
+                        }
+                        if (r.width > window.innerWidth * 0.9) break;
+                    }
+                    return best;
+                }"""
+            )
+            if not info:
                 continue
-            found.append((box["y"], box["x"], img, box))
+
+            cards.append((info["y"], info["x"], label, info))
         except Exception:
             continue
 
-    if not found:
-        raise RuntimeError("Keine sichtbare Beitragskarte unter der 90-Sekunden-Rubrik gefunden.")
+    if not cards:
+        raise RuntimeError("Keine sichtbaren 90-Sekunden-Karten unter der Rubrik gefunden.")
 
-    # Oberste Reihe, darin ganz links = neuester Beitrag.
-    found.sort(key=lambda item: (round(item[0] / 40), item[1]))
-    y, x, img, box = found[0]
-    print(f"[INFO] Erste sichtbare 90-Sekunden-Karte bei x={x:.0f}, y={y:.0f}")
+    # Zuerst oberste Kartenreihe bestimmen, danach wirklich ganz links wählen.
+    min_y = min(item[0] for item in cards)
+    first_row = [item for item in cards if abs(item[0] - min_y) <= 80]
+    first_row.sort(key=lambda item: item[1])
+    y, x, label, info = first_row[0]
 
-    # Falls doch ein Anchor im Elternbaum steckt, direkt verwenden.
-    try:
-        href = img.evaluate(
-            """el => {
-                let n = el;
-                for (let i=0; i<10 && n; i++, n=n.parentElement) {
-                    if (n.tagName === 'A' && n.href) return n.href;
-                    const a = n.querySelector && n.querySelector('a[href]');
-                    if (a && a.href) return a.href;
-                }
-                return '';
-            }"""
-        )
-        href = normalize_article_url(href)
-        if href:
-            print(f"[INFO] Link direkt an der ersten Karte gefunden: {href}")
-            return href
-    except Exception:
-        pass
+    preview = " ".join(info.get("text", "").split())[:180]
+    print(f"[INFO] Linke Karte der obersten Reihe bei x={x:.0f}, y={y:.0f}")
+    print(f"[INFO] Kartentext: {preview}")
 
-    # Bei ServusTV ist die Karte teils per JavaScript klickbar. Dann klicken wir
-    # tatsächlich auf die erste Bildkarte und lesen die Ziel-URL aus.
+    href = normalize_article_url(info.get("href", ""))
+    if href:
+        print(f"[INFO] Link direkt an linker Karte gefunden: {href}")
+        return href
+
+    # Falls kein href vorhanden ist, klicken wir auf den Kartencontainer statt auf
+    # das Bild. Das vermeidet, dass ein geklontes/überlagertes Bild geklickt wird.
     old_url = page.url
     try:
-        img.click(timeout=5000, force=True)
+        label.evaluate(
+            """el => {
+                let n = el;
+                let target = null;
+                for (let i = 0; i < 10 && n; i++, n = n.parentElement) {
+                    const r = n.getBoundingClientRect();
+                    const txt = (n.innerText || '').trim();
+                    if (r.width >= 250 && r.height >= 180 && txt.length >= 20) target = n;
+                    if (r.width > window.innerWidth * 0.9) break;
+                }
+                if (target) target.click();
+                else el.click();
+            }"""
+        )
     except Exception:
-        page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        page.mouse.click(info["x"] + info["w"] / 2, info["y"] + info["h"] / 2)
 
     page.wait_for_timeout(4000)
 
-    # Falls ein neuer Tab/Fenster geöffnet wurde, diesen verwenden.
     if len(page.context.pages) > 1:
         newest = page.context.pages[-1]
         newest.wait_for_load_state("domcontentloaded", timeout=15000)
         href = normalize_article_url(newest.url)
         if href:
+            print(f"[INFO] Ziel im neuen Tab: {href}")
             return href
 
     href = normalize_article_url(page.url)
@@ -217,7 +236,7 @@ def find_first_news90_card(page):
         print(f"[INFO] Ziel nach Klick: {href}")
         return href
 
-    raise RuntimeError("Erste 90-Sekunden-Karte konnte nicht geöffnet werden.")
+    raise RuntimeError("Linke 90-Sekunden-Karte konnte nicht geöffnet werden.")
 
 
 def get_latest_news90():
@@ -234,7 +253,6 @@ def get_latest_news90():
         page.goto(SERIES_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(5000)
 
-        # Consent-Dialog schließen, falls vorhanden.
         for label in ("Alle akzeptieren", "Akzeptieren", "Zustimmen"):
             try:
                 button = page.get_by_role("button", name=re.compile(label, re.I))
@@ -245,7 +263,6 @@ def get_latest_news90():
             except Exception:
                 pass
 
-        # Langsam nach unten scrollen, damit die Rubrik wirklich gerendert wird.
         for _ in range(8):
             try:
                 exact = page.get_by_text("Servus Nachrichten in 90 Sekunden", exact=True)
@@ -264,7 +281,6 @@ def get_latest_news90():
             print("[WARNUNG] Bestehende news90-Daten bleiben unverändert.")
             return
 
-        # Zielseite direkt öffnen, damit Titel und Bild sauber ausgelesen werden.
         page.goto(article_url, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(2500)
 
