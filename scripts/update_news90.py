@@ -1,144 +1,95 @@
 import json
 import re
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
 
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = ROOT / "headlines.json"
-SERIES_URL = "https://www.servustv.com/de/page/AA-1Y5RJCD1H2111"
 SERIES_ID = "AA-1Y5RJCD1H2111"
+SERIES_URL = f"https://www.servustv.com/de/page/{SERIES_ID}"
+API_URL_AT = f"https://tv-api.redbull.com/products/dynamic/v5.2/stv/de/at/{SERIES_ID}"
+KNOWN_ID = "AAUUYP6RNA3IVBL8FFPC"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36",
 }
 
 
-def load_existing_data():
-    try:
-        return json.loads(JSON_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-
-
-def normalize_article_url(url):
-    if not url:
-        return ""
-    parsed = urlparse(urljoin(SERIES_URL, url))
-    if parsed.netloc not in {"www.servustv.com", "servustv.com"}:
-        return ""
-    path = parsed.path.rstrip("/")
-    if not re.fullmatch(r"/de/page/[A-Z0-9-]+", path, flags=re.I):
-        return ""
-    if SERIES_ID.lower() in path.lower():
-        return ""
-    return f"https://www.servustv.com{path}"
-
-
-def walk_json(obj, found, context=""):
-    """Findet in JSON-Antworten ServusTV-Beiträge und ihren Kontext."""
+def walk(obj, path="root"):
+    yield path, obj
     if isinstance(obj, dict):
-        # Objekt als kompakte Textdarstellung untersuchen.
-        try:
-            blob = json.dumps(obj, ensure_ascii=False)
-        except Exception:
-            blob = ""
-        low = blob.lower()
-        if "90 sekunden" in low or "nachrichten in 90" in low:
-            urls = re.findall(r'https?://(?:www\.)?servustv\.com/(?:de/)?page/[A-Z0-9-]+[^"\\ ]*', blob, re.I)
-            ids = re.findall(r'AA[A-Z0-9-]{8,}', blob, re.I)
-            found.append({
-                "context": context,
-                "urls": urls[:10],
-                "ids": ids[:20],
-                "preview": blob[:1800],
-            })
-        for k, v in obj.items():
-            walk_json(v, found, f"{context}/{k}")
+        for key, value in obj.items():
+            yield from walk(value, f"{path}.{key}")
     elif isinstance(obj, list):
-        for i, v in enumerate(obj):
-            walk_json(v, found, f"{context}[{i}]")
+        for i, value in enumerate(obj):
+            yield from walk(value, f"{path}[{i}]")
+
+
+def compact(obj, limit=1800):
+    try:
+        return re.sub(r"\s+", " ", json.dumps(obj, ensure_ascii=False))[:limit]
+    except Exception:
+        return ""
 
 
 def get_latest_news90():
-    print(f"[INFO] Öffne Servus-Nachrichten-Seite: {SERIES_URL}")
-    api_hits = []
-    network_urls = []
+    print(f"[INFO] GitHub-Runner kann geografisch in den USA liegen.")
+    print(f"[INFO] Deshalb wird die Österreich-Ausgabe jetzt ausdrücklich erzwungen.")
+    print(f"[INFO] Österreich-API: {API_URL_AT}")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            locale="de-AT",
-            user_agent=HEADERS["User-Agent"],
-            viewport={"width": 1600, "height": 1200},
+        request = p.request.new_context(
+            extra_http_headers={
+                "User-Agent": HEADERS["User-Agent"],
+                "Accept": "application/json,text/plain,*/*",
+                "Referer": SERIES_URL,
+                "Origin": "https://www.servustv.com",
+            }
         )
-        page = context.new_page()
 
-        def on_response(response):
-            try:
-                url = response.url
-                ctype = (response.headers.get("content-type") or "").lower()
-                # Nur wahrscheinliche Datenquellen protokollieren.
-                if any(x in url.lower() for x in ("api", "graphql", "content", "page", "playlist", "rail", "collection")):
-                    if url not in network_urls:
-                        network_urls.append(url)
-                if "json" not in ctype:
-                    return
-                data = response.json()
-                hits = []
-                walk_json(data, hits, url)
-                for hit in hits:
-                    hit["source"] = url
-                    api_hits.append(hit)
-            except Exception:
-                pass
+        response = request.get(API_URL_AT, timeout=60000)
+        print(f"[DIAG] AT-API HTTP-Status: {response.status}")
+        if not response.ok:
+            print("[WARNUNG] Österreich-API konnte nicht geladen werden.")
+            return
 
-        page.on("response", on_response)
-        page.goto(SERIES_URL, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(5000)
+        try:
+            data = response.json()
+        except Exception as exc:
+            print(f"[WARNUNG] API-Antwort ist kein JSON: {exc}")
+            return
 
-        for label in ("Alle akzeptieren", "Akzeptieren", "Zustimmen"):
-            try:
-                button = page.get_by_role("button", name=re.compile(label, re.I))
-                if button.count() and button.first.is_visible():
-                    button.first.click(timeout=1500)
-                    page.wait_for_timeout(1200)
-                    break
-            except Exception:
-                pass
+        raw = json.dumps(data, ensure_ascii=False)
+        print(f"[DIAG] Antwortgröße: {len(raw)} Zeichen")
+        print(f"[DIAG] Bekannte aktuelle ID {KNOWN_ID} in AT-API: {KNOWN_ID in raw}")
+        print(f"[DIAG] Text '90 Sekunden' in AT-API: {'90 Sekunden' in raw}")
+        print(f"[DIAG] Titel 'Massive Explosion' in AT-API: {'Massive Explosion' in raw}")
 
-        # Ganze relevante Seite laden, damit auch lazy-loaded API-Aufrufe stattfinden.
-        for _ in range(12):
-            page.mouse.wheel(0, 1000)
-            page.wait_for_timeout(700)
+        hits = []
+        for path, obj in walk(data):
+            if not isinstance(obj, (dict, list)):
+                continue
+            blob = compact(obj, 12000)
+            low = blob.lower()
+            if KNOWN_ID.lower() in low or "massive explosion" in low or "servus nachrichten in 90 sekunden" in low:
+                # Kleine/nahe Objekte sind für die Strukturdiagnose am wertvollsten.
+                hits.append((len(blob), path, obj))
 
-        page.wait_for_timeout(3000)
+        hits.sort(key=lambda x: x[0])
+        print(f"[DIAG] Relevante AT-API-Strukturtreffer: {len(hits)}")
+        for i, (_, path, obj) in enumerate(hits[:12], 1):
+            print(f"[AT-TREFFER {i}] Pfad: {path}")
+            print(f"[AT-TREFFER {i}] Vorschau: {compact(obj)}")
 
-        print(f"[DIAG] Beobachtete mögliche Daten-Endpunkte: {len(network_urls)}")
-        for u in network_urls[:40]:
-            print(f"[NETZWERK] {u}")
+        if KNOWN_ID in raw:
+            print("[ERFOLG] Die richtige österreichische Datenquelle ist gefunden.")
+            print("[INFO] Nächster Schritt: Aus genau dieser Struktur wird automatisch die erste 90-Sekunden-Karte gelesen.")
+        else:
+            print("[WARNUNG] Auch die AT-API enthält die bekannte aktuelle ID noch nicht.")
 
-        print(f"[DIAG] JSON-Treffer mit '90 Sekunden': {len(api_hits)}")
-        for i, hit in enumerate(api_hits[:20], 1):
-            print(f"[API-TREFFER {i}] Quelle: {hit.get('source','')}")
-            print(f"[API-TREFFER {i}] Pfad: {hit.get('context','')}")
-            if hit.get("urls"):
-                print(f"[API-TREFFER {i}] URLs: {' | '.join(hit['urls'])}")
-            if hit.get("ids"):
-                print(f"[API-TREFFER {i}] IDs: {' | '.join(hit['ids'])}")
-            preview = re.sub(r"\s+", " ", hit.get("preview", ""))[:1200]
-            print(f"[API-TREFFER {i}] Vorschau: {preview}")
-
-        # Zusätzlich prüfen, ob die bekannte aktuelle ID irgendwo in Netzwerk/DOM auftaucht.
-        known_id = "AAUUYP6RNA3IVBL8FFPC"
-        body_html = page.content()
-        print(f"[DIAG] Bekannte aktuelle ID {known_id} im gerenderten DOM: {known_id in body_html}")
-        print(f"[DIAG] Bekannte aktuelle ID in beobachteten Netzwerk-URLs: {any(known_id in u for u in network_urls)}")
-
-        # WICHTIG: Dieser Diagnose-Lauf verändert headlines.json absichtlich nicht.
-        print("[INFO] Diagnose abgeschlossen; headlines.json bleibt unverändert.")
-        browser.close()
+        print("[INFO] Diagnose abgeschlossen; headlines.json bleibt bei diesem Test unverändert.")
+        request.dispose()
 
 
 if __name__ == "__main__":
